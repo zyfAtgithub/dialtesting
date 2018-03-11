@@ -1,0 +1,85 @@
+.dial-container{
+    margin: 0 auto;
+    padding: 5px 12px;
+    width: 70%;
+}
+
+.dial-show{
+    display: block;
+}
+
+.dial-hidde{
+    display: none;
+}
+
+.dial-title{
+    background: gold;
+    display: block;
+    padding: 10px 12px;
+    color: navy;
+    font-size:16px;
+    font-weight: bolder;
+}
+
+.dial-content{
+    border: 1px solid #999999;
+    margin: 5px 0px;
+    padding: 4px;
+}
+
+/** form */
+.dial-form-item{
+    margin-top: 10px;
+    padding: 5px 3px;
+    border-bottom: 1px solid gray;
+}
+
+/** input */
+.dial-form-input{
+    font-size: 16px;
+}
+
+.dial-form-input-long{
+    width:400px;
+}
+
+.dial-form-input-normal{
+    width:200px;
+}
+
+.dial-form-input-txt{
+    border: none;
+    border-bottom: 1px solid black;
+}
+
+.dial-form-input-txtarea{
+    with:200px;
+    height:100px;
+}
+
+
+.dial-server-resp{
+    font-size: 16px;
+    font-weight:bolder;
+}
+
+.dial-server-resp-succ{
+    color: green;
+}
+
+.dial-server-resp-error{
+    color: red;
+}
+
+.dial-detail{
+    font-size: 16px;
+    color: green;
+}
+
+.dial-task-progress{
+    padding: 2px 3px;
+    margin: 2px 3px;
+    border: 1px solid dimgrey;
+    font-size:14px;
+    color: #2D93CA;
+}

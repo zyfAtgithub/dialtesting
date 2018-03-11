@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>拨测客户端</title>
+    <link rel="stylesheet" th:href="@{/css/dial.css}" />
+    <script type="text/javascript" th:src="@{/js/jquery-2.2.4.js}"></script>
+
+
+</head>
+<body>
+    <div class="dial-container">
+        <div class="dial-title">
+            拨测设置
+        </div>
+        <div class="dial-content">
+            <form action="#" method="post" onsubmit="return submitDial();">
+                <div class="dial-form-item">
+                    <label for="url">拨测url：</label>
+                    <input id="url" required="required" class="dial-form-input dial-form-input-long dial-form-input-txt"
+                           type="text" width="700px" name="url"/>
+                </div>
+
+                <div class="dial-form-item">
+                    <label for="dialCnt">拨测次数：</label>
+                    <input id="dialCnt" class="dial-form-input dial-form-input-txt"
+                           type="number" value="1" name="dialCnt"/>
+                </div>
+
+                <div class="dial-form-item">
+                    <label for="interval">每次间隔(ms)：</label>
+                    <input id="interval" class="dial-form-input dial-form-input-txt"
+                           type="number" value="1" name="interval"/>
+                </div>
+
+                <div class="dial-form-item">
+                    <label for="concurrentNum">并发数：</label>
+                    <input id="concurrentNum" class="dial-form-input dial-form-input-txt"
+                           type="number" value="1" name="concurrentNum"/>
+                </div>
+
+                <div class="dial-form-item">
+                    <label for="proxyEnabled">启用代理：</label>
+                    <input id="proxyEnabled" class="dial-form-input dial-form-input-txt"
+                           type="checkbox" name="proxyEnabled"/>
+
+                </div>
+
+
+                <div class="dial-form-item dial-hidde" id="proxy-list">
+                    <label for="proxyList">代理IP列表(一行一个)：</label><br>
+                    <textarea id="proxyList" class="dial-form-input dial-form-input-txtarea" name="proxyList"></textarea>
+                </div>
+
+                <div class="dial-form-item">
+                    <button type="submit">提交</button>
+                </div>
+            </form>
+
+        </div>
+
+        <div class="dial-title">
+            服务器响应
+        </div>
+        <div class="dial-content dial-server-resp">
+            无
+        </div>
+
+        <div class="dial-title">
+            拨测状态
+        </div>
+        <div class="dial-content dial-detail">
+        </div>
+    </div>
+
+    <script>
+
+        var taskInterval = {};
+        $(function(){
+            $("#proxyEnabled").change(function () {
+                var checked = $(this).is(':checked');
+                console.log();
+                if (checked) {
+                    $("#proxy-list").show();
+                }
+                else {
+                    $("#proxy-list").hide();
+                }
+            });
+        });
+
+        function submitDial() {
+            var url = $("#url").val();
+            var dialCnt = $("#dialCnt").val();
+            var interval = $("#interval").val();
+            var concurrentNum = $("#concurrentNum").val();
+            var proxyEnabled = $("#proxyEnabled").is(":checked");
+            var proxyList = $("#proxyList").val();
+            var data = {};
+            data.url = url;
+            data.dialCnt = dialCnt;
+            data.interval = interval;
+            data.concurrentNum = concurrentNum;
+            data.proxyEnabled = proxyEnabled;
+            data.proxyList = proxyList.replace(/\r\n/g, ',').replace(/\n/g, ',');
+
+            $.ajax({
+                url:"dial",
+                type:"POST",
+                data:data,
+                dataType:"json",
+                success:function (res) {
+                    var code = res.resultCode;
+                    var msg = res.msg;
+                    var html = "响应码：" + code + "<br>" + "信息：" + msg;
+                    $(".dial-server-resp").html(html);
+                    if (code != 0) {
+                        $(".dial-server-resp").removeClass("dial-server-resp-succ");
+                        $(".dial-server-resp").addClass("dial-server-resp-error");
+                    }
+                    else {
+                        $(".dial-server-resp").removeClass("dial-server-resp-error");
+                        $(".dial-server-resp").addClass("dial-server-resp-succ");
+                    }
+
+                    //服务端有任务信息返回，向服务器请求获取拨测任务执行进度
+                    if (res.taskIdList) {
+                        $(".dial-detail").html('');
+                        queryTaskProgress(res.taskIdList);
+                    }
+                },
+                error:function(xhr,textStatus){
+                    console.log('服务器处理出错');
+                    $(".dial-server-resp").html('服务器处理出错!!');
+                    $(".dial-server-resp").removeClass("dial-server-resp-succ");
+                    $(".dial-server-resp").addClass("dial-server-resp-error");
+                    console.log(xhr)
+                    console.log(textStatus)
+                }
+            });
+            return false;
+        }
+
+        /**
+         * 查看拨测任务处理进度
+         * @param taskIdList
+         */
+        function queryTaskProgress(taskIdList) {
+            $.each(taskIdList, function (index, taskId) {
+                clearInterval(taskInterval);//停止之前的计时器，防止重复
+                var taskDiv = $("<div></div>");
+                taskDiv.addClass("dial-task-progress");
+                taskDiv.attr("id", "dial-task-progress-" + taskId);
+                $(".dial-detail").append(taskDiv);
+            });
+            //2s查询一次
+            taskInterval = setInterval(function(){qrySingleTaskProgress()}, 2000);
+        }
+        
+        function qrySingleTaskProgress() {
+            $.ajax({
+                url:"qryTaskProgress",
+                type:"get",
+                data:{},
+                dataType:"json",
+                success:function (result) {
+                    if (result) {
+                        if (result.taskMap) {
+                            var taskCnt = 0;
+                            var finishTaskCnt = 0;
+                            $.each(result.taskMap, function (taskId, taskDetails) {
+                                taskCnt++;
+                                console.log(taskId);
+                                console.log(taskDetails);
+                                var arr = taskId.split('-');
+                                var dialCnt = 1;
+                                if (arr.length == 2) {
+                                    dialCnt = arr[0];
+                                }
+                                else {
+                                    dialCnt = arr[1];
+                                }
+                                var finishedCnt = taskDetails.length;
+                                var finishPercent = (finishedCnt * 100 / parseInt(dialCnt)).toFixed(2) + '%';
+                                console.log(finishPercent)
+                                $("#dial-task-progress-" + taskId).html("[任务" + taskId + "] 应请求 "+dialCnt+"次，" +
+                                    " 当前已完成请求 ["+taskDetails.length+"]次，完成百分比：" + finishPercent);
+                                if (finishPercent == '100.00%') {
+                                    finishTaskCnt++;
+                                }
+                            });
+                            if (finishTaskCnt == taskCnt) {
+                                //停止计时器
+                                clearInterval(taskInterval);
+                            }
+                        }
+                    }
+                },
+                error:function (xhr,textStatus) {
+                    console.log('服务器处理出错');
+                    console.log(xhr)
+                    console.log(textStatus)
+                }
+            });
+        }
+        
+    </script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+spring:
+  thymeleaf:
+    prefix: classpath:/templates/
+    mode: LEGACYHTML5  # 不进未关闭标签检查，需配合nekohtml使用
+    cache: false
+
+logging:
+  config: classpath:logback.xml
+
