@@ -82,4 +82,37 @@
     border: 1px solid dimgrey;
     font-size:14px;
     color: #2D93CA;
+    line-height: 25px;
+}
+
+.dial-static-total{
+    font-size: 14px;
+    color: darkblue;
+}
+
+.dial-static-200{
+    margin-left: 15px;
+    font-size: 14px;
+    color: green;
+}
+
+
+.dial-static-403{
+    margin-left: 15px;
+    font-size: 14px;
+    color: coral;
+}
+
+
+.dial-static-500{
+    margin-left: 15px;
+    font-size: 14px;
+    color: tomato;
+}
+
+
+.dial-static-other{
+    margin-left: 15px;
+    font-size: 14px;
+    color: firebrick;
 }

@@ -40,18 +40,16 @@ public class DialTesting {
     private static int finishedTaskCnt = 0;//已经运行完成的task数
 
     //任务执行信息 key：线程号， value：每次访问记录的详情
-    private static Map<String, List<String>> taskMap = new HashMap<String, List<String>>();
+    private static Map<String, List<Integer>> taskMap = new HashMap<String, List<Integer>>();
+    private static Map<String, JSONObject> taskResultMap = new HashMap<String, JSONObject>();
 
     //日志文件输出路径
     private final String STOR_DIR = Constants.STOR_DIR;
 
-    private static String dayDir;
-    private static long totalCnt = 0L;
-    protected static long count200Ok = 0L;
-    protected static long count403 = 0L;
-    protected static long countOther = 0L;
+    private int conTimeout;
+    private int soTimeout;
     private int dialCount;
-    private long interval;
+    private int interval;
     private String URL;
     private String[] PROXY_LIST = new String[0];
 
@@ -71,11 +69,12 @@ public class DialTesting {
     public static String loadTaskProgress() {
         JSONObject jsonResult = new JSONObject();
         jsonResult.put("taskMap", taskMap);
+        jsonResult.put("taskResultMap", taskResultMap);
         return jsonResult.toString();
     }
 
     public static String dial(String url, int dialCount, int interval,
-    int concurrentNum, boolean proxyEnabled, String proxyList) {
+    int concurrentNum, int conTimeout, int soTimeout, boolean proxyEnabled, String proxyList) {
 
         JSONObject jsonResult = new JSONObject();
         if (!ValidateUtil.validateUrl(url)) {
@@ -102,11 +101,14 @@ public class DialTesting {
         dialTesting.running = true;
         finishedTaskCnt = 0;
         taskMap.clear();
+        taskResultMap.clear();
 
         dialTesting.URL = url;
         dialTesting.PROXY_LIST = proxyList.split(",");
         int threadPoolNum = concurrentNum;
 
+        dialTesting.conTimeout = conTimeout;
+        dialTesting.soTimeout = soTimeout;
         dialTesting.interval = interval;
         dialTesting.dialCount = dialCount;
         ExecutorService executorService;
@@ -120,9 +122,12 @@ public class DialTesting {
                 HttpHost host = new HttpHost(proxyIp, 80);
                 for(i = 1; i <= threadPoolNum; ++i) {
                     //这个list只是用来便于各线程提交当前执行进度
-                    List<String> finishedVisitNum =  new ArrayList<String>();
+                    List<Integer> finishedVisitNum =  new ArrayList<Integer>();
+                    finishedVisitNum.add(0);
                     taskMap.put(host.getHostName() + "-" + dialCount + "-" + i, finishedVisitNum);
-                    executorService.execute(dialTesting.new VisitTask(finishedVisitNum, host.getHostName() + "-" + i + ".txt", host));
+                    JSONObject json = new JSONObject();
+                    taskResultMap.put(host.getHostName() + "-" + dialCount + "-" + i, json);
+                    executorService.execute(dialTesting.new VisitTask(finishedVisitNum, host.getHostName() + "-" + i + ".txt", host, json));
                 }
             }
             executorService.shutdown();
@@ -132,9 +137,12 @@ public class DialTesting {
             executorService = Executors.newFixedThreadPool(threadPoolNum + 1);
             for(i = 1; i <= threadPoolNum; ++i) {
                 //这个list只是用来便于各线程提交当前执行进度
-                List<String> finishedVisitNum =  new ArrayList<String>();
+                List<Integer> finishedVisitNum =  new ArrayList<Integer>();
+                finishedVisitNum.add(0);
                 taskMap.put(dialCount + "-" + i, finishedVisitNum);
-                executorService.execute(dialTesting.new VisitTask(finishedVisitNum, i + ".txt", (HttpHost)null));
+                JSONObject json = new JSONObject();
+                taskResultMap.put(dialCount + "-" + i, json);
+                executorService.execute(dialTesting.new VisitTask(finishedVisitNum, i + ".txt", (HttpHost)null, json));
             }
             executorService.shutdown();
         }
@@ -147,14 +155,14 @@ public class DialTesting {
     }
 
     public static void main(String[] args) {
-//        String url = "http://dxcdntest.ctdns.net/";
-        String url = "http://cdntest.ctdns.net/";
-        int dialCnt = 1;
+        String url = "http://dxcdntest.ctdns.net/";
+//        String url = "http://cdntest.ctdns.net/";
+        int dialCnt = 100;
         int interval = 1;
-        int concurrentNum = 1;
+        int concurrentNum = 10;
         boolean proxyEnabled = false;
         String proxList = "58.221.5.17";
-        String msg = dial(url, dialCnt, interval, concurrentNum, proxyEnabled, proxList);
+        String msg = dial(url, dialCnt, interval, concurrentNum, 1, 1, proxyEnabled, proxList);
         System.out.println(msg);
 
     }
@@ -164,18 +172,20 @@ public class DialTesting {
         private String dayDir;
         String fileName;
         //这个list只是用来便于各线程提交当前执行进度
-        List<String> finishedVisitNum;
+        List<Integer> finishedVisitNum;
         private long totalCnt = 0L;
         private long count200Ok = 0L;
         private long count403 = 0L;
         private long count500 = 0L;
         private long countOther = 0L;
         private HttpHost host;
+        private JSONObject resultJson;
 
-        public VisitTask(List<String> finishedVisitNum, String fileName, HttpHost host) {
+        public VisitTask(List<Integer> finishedVisitNum, String fileName, HttpHost host, JSONObject resultJson) {
             this.finishedVisitNum = finishedVisitNum;
             this.fileName = fileName;
             this.host = host;
+            this.resultJson = resultJson;
         }
 
         public void visit() {
@@ -188,7 +198,7 @@ public class DialTesting {
                 JSONObject res = null;
                 ++cnt;
                 ++this.totalCnt;
-                res = HttpclientUtil.get(URL, this.host, 2000, 3000);
+                res = HttpclientUtil.get(URL, this.host, conTimeout, soTimeout);
                 if (res.getString("statusCode").equals("200")) {
                     ++this.count200Ok;
                 } else if (res.getString("statusCode").equals("403")) {
@@ -199,36 +209,48 @@ public class DialTesting {
                     ++this.countOther;
                 }
 
-                String content = "第" + cnt + "次：" + res.getString("begin") + "\t" + res.getString("end") + "\t" + URL + "\t" + res.getString("cost") + "\t" + res.getString("statusCode");
-//                String content = "线程" + currThreadIndex + "（第" + cnt + "次访问）-->\t" + res.getString("begin") + "\t" + res.getString("end") + "\t" + URL + "\t" + res.getString("cost") + "\t" + res.getString("statusCode");
-                if (null != this.host) {
-                    content = content + "\tproxy:" + this.host.getHostName();
-                }
+//                String content = "线程" + currThreadIndex + "第" + cnt + "次：" + res.getString("begin") + "\t" + res.getString("end") + "\t" + URL + "\t" + res.getString("cost") + "\t" + res.getString("statusCode");
+////                String content = "线程" + currThreadIndex + "（第" + cnt + "次访问）-->\t" + res.getString("begin") + "\t" + res.getString("end") + "\t" + URL + "\t" + res.getString("cost") + "\t" + res.getString("statusCode");
+//                if (null != this.host) {
+//                    content = content + "\tproxy:" + this.host.getHostName();
+//                }
 
                 try {
                     Thread.sleep(interval);
                 } catch (InterruptedException var11) {
                     var11.printStackTrace();
                 }
-
-                finishedVisitNum.add(content);
-                System.out.println(content);
-
+                finishedVisitNum.set(0, finishedVisitNum.get(0) + 1);
             }
 
-            StringBuffer buf = new StringBuffer();
-            if (null != this.host) {
-                buf.append("线程号：").append(currThreadIndex).append("\n代理Ip：" + this.host.getHostName());
-            } else {
-                buf.append("\n线程号：").append(currThreadIndex);
-            }
 
-            buf.append("\n开始时间：");
-            buf.append(begin).append("\n结束时间：").append(DateUtils.getNowTimeStr("yyyy-MM-dd HH:mm:ss.SSS"));
-            buf.append("\n统计：count:[").append(this.totalCnt).append("]").append(", 200 OK count:[").append(this.count200Ok)
-                    .append("], 403 count:[").append(this.count403).append("], 500 count:[")
-                    .append(this.count500).append("], other count:[").append(this.countOther).append("]");
-            FileUtil.appentContent2File(STOR_DIR + this.dayDir + File.separator + this.fileName, buf.toString());
+            //统计结果
+            String end = DateUtils.getNowTimeStr("yyyy-MM-dd HH:mm:ss.SSS");
+            resultJson.put("currThreadIndex", currThreadIndex);
+            resultJson.put("proxyIp", null != this.host ? this.host.getHostName():"");
+            resultJson.put("begin", begin);
+            resultJson.put("end", end);
+            resultJson.put("totalCnt", this.totalCnt);
+            resultJson.put("count200Ok", this.count200Ok);
+            resultJson.put("count403", this.count403);
+            resultJson.put("count500", this.count500);
+            resultJson.put("countOther", this.countOther);
+
+//            StringBuffer buf = new StringBuffer();
+//            if (null != this.host) {
+//                buf.append("线程号：").append(currThreadIndex).append("\n代理Ip：" + this.host.getHostName());
+//                resultJson.put("proxyIp", this.host.getHostName());
+//            } else {
+//                buf.append("\n线程号：").append(currThreadIndex);
+//            }
+//            buf.append("\n开始时间：");
+//            buf.append(begin).append("\n结束时间：").append(end);
+//            buf.append("\n统计：count:[").append(this.totalCnt).append("]").append(", 200 OK count:[").append(this.count200Ok)
+//                    .append("], 403 count:[").append(this.count403).append("], 500 count:[")
+//                    .append(this.count500).append("], other count:[").append(this.countOther).append("]");
+
+            //FileUtil.appentContent2File(STOR_DIR + this.dayDir + File.separator + this.fileName, buf.toString());
+
         }
 
         public void run() {

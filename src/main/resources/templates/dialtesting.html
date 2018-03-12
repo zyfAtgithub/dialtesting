@@ -17,7 +17,7 @@
                 <div class="dial-form-item">
                     <label for="url">拨测url：</label>
                     <input id="url" required="required" class="dial-form-input dial-form-input-long dial-form-input-txt"
-                           type="text" width="700px" name="url"/>
+                           type="text" value = "http://dxcdntest.ctdns.net/" width="700px" name="url"/>
                 </div>
 
                 <div class="dial-form-item">
@@ -36,6 +36,18 @@
                     <label for="concurrentNum">并发数：</label>
                     <input id="concurrentNum" class="dial-form-input dial-form-input-txt"
                            type="number" value="1" name="concurrentNum"/>
+                </div>
+
+                <div class="dial-form-item">
+                    <label for="conTimeout">连接超时（ms）：</label>
+                    <input id="conTimeout" class="dial-form-input dial-form-input-txt"
+                           type="number" value="2000" name="conTimeout"/>
+                </div>
+
+                <div class="dial-form-item">
+                    <label for="soTimeout">传输超时（ms）：</label>
+                    <input id="soTimeout" class="dial-form-input dial-form-input-txt"
+                           type="number" value="3000" name="soTimeout"/>
                 </div>
 
                 <div class="dial-form-item">
@@ -93,6 +105,8 @@
             var dialCnt = $("#dialCnt").val();
             var interval = $("#interval").val();
             var concurrentNum = $("#concurrentNum").val();
+            var conTimeout = $("#conTimeout").val();
+            var soTimeout = $("#soTimeout").val();
             var proxyEnabled = $("#proxyEnabled").is(":checked");
             var proxyList = $("#proxyList").val();
             var data = {};
@@ -100,6 +114,8 @@
             data.dialCnt = dialCnt;
             data.interval = interval;
             data.concurrentNum = concurrentNum;
+            data.conTimeout = conTimeout;
+            data.soTimeout = soTimeout;
             data.proxyEnabled = proxyEnabled;
             data.proxyList = proxyList.replace(/\r\n/g, ',').replace(/\n/g, ',');
 
@@ -147,7 +163,7 @@
         function queryTaskProgress(taskIdList) {
             $.each(taskIdList, function (index, taskId) {
                 clearInterval(taskInterval);//停止之前的计时器，防止重复
-                var taskDiv = $("<div></div>");
+                var taskDiv = $("<div>[任务" + taskId + "] 拨测进行中。。</div>");
                 taskDiv.addClass("dial-task-progress");
                 taskDiv.attr("id", "dial-task-progress-" + taskId);
                 $(".dial-detail").append(taskDiv);
@@ -167,10 +183,9 @@
                         if (result.taskMap) {
                             var taskCnt = 0;
                             var finishTaskCnt = 0;
-                            $.each(result.taskMap, function (taskId, taskDetails) {
+                            $.each(result.taskMap, function (taskId, finishedVisitCnt) {
                                 taskCnt++;
                                 console.log(taskId);
-                                console.log(taskDetails);
                                 var arr = taskId.split('-');
                                 var dialCnt = 1;
                                 if (arr.length == 2) {
@@ -179,13 +194,28 @@
                                 else {
                                     dialCnt = arr[1];
                                 }
-                                var finishedCnt = taskDetails.length;
-                                var finishPercent = (finishedCnt * 100 / parseInt(dialCnt)).toFixed(2) + '%';
-                                console.log(finishPercent)
-                                $("#dial-task-progress-" + taskId).html("[任务" + taskId + "] 应请求 "+dialCnt+"次，" +
-                                    " 当前已完成请求 ["+taskDetails.length+"]次，完成百分比：" + finishPercent);
-                                if (finishPercent == '100.00%') {
+                                var finishPercent = (finishedVisitCnt * 100 / parseInt(dialCnt)).toFixed(2) + '%';
+                                var resultStatic = '';
+                                if (finishedVisitCnt == dialCnt) {
+                                    //此线程已完成所有访问请求
                                     finishTaskCnt++;
+                                    if (result.taskResultMap) {
+                                        var resultJson = result.taskResultMap[taskId];
+                                        if (resultJson) {
+                                            resultStatic += '<br>时间：' + resultJson.begin
+                                            + ' ~ ' + resultJson.end + '<br><span class="dial-static-total">总访问量数：' + resultJson.totalCnt
+                                            + '</span><span class="dial-static-200">返回码200：' + resultJson.count200Ok + '</span>'
+                                            + '<span class="dial-static-403">返回码403：' + resultJson.count403
+                                            + '</span><span class="dial-static-500">返回码500：' + resultJson.count500 + '</span>'
+                                            + '<span class="dial-static-other">超时：' + resultJson.countOther + '</span>';
+
+                                            $("#dial-task-progress-" + taskId).html("[任务" + taskId + "]处理完成" + resultStatic);
+                                        }
+                                    }
+                                }
+                                else {
+                                    $("#dial-task-progress-" + taskId).html("[任务" + taskId + "] 应请求 "+dialCnt+"次，" +
+                                        " 当前已完成请求 ["+finishedVisitCnt+"]次，完成百分比：" + finishPercent);
                                 }
                             });
                             if (finishTaskCnt == taskCnt) {

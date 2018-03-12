@@ -25,16 +25,15 @@ public class App {
     @ResponseBody
     public String dial(@RequestParam("url")String url, @RequestParam("dialCnt")Integer dialCnt,
                        @RequestParam("interval")Integer interval, @RequestParam("concurrentNum")Integer concurrentNum,
+                       @RequestParam("conTimeout")Integer conTimeout,@RequestParam("soTimeout")Integer soTimeout,
                        @RequestParam("proxyEnabled")Boolean proxyEnabled, @RequestParam("proxyList")String proxyList){
-        return DialTesting.dial(url, dialCnt, interval,  concurrentNum, proxyEnabled, proxyList);
+        return DialTesting.dial(url, dialCnt, interval,  concurrentNum, conTimeout, soTimeout, proxyEnabled, proxyList);
     }
 
     @RequestMapping("/")
     public String dial(HashMap<String,Object> map){
-        map.put("hello","hello");
-        return"/dialtesting";
+        return "dialtesting";
     }
-
 
     @RequestMapping(value ="/qryTaskProgress", method = RequestMethod.GET)
     @ResponseBody
