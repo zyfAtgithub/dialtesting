@@ -111,7 +111,7 @@
                 success:function (res) {
                     var code = res.resultCode;
                     var msg = res.msg;
-                    var html = "响应码：" + code + "<br>" + "信息：" + msg;
+                    var html = "信息：" + msg;
                     $(".dial-server-resp").html(html);
                     if (code != 0) {
                         $(".dial-server-resp").removeClass("dial-server-resp-succ");
