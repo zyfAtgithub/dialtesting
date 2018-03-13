@@ -120,7 +120,7 @@ public class DialTesting {
             totalTaskCnt = threadPoolNum;
             for (String proxyIp : dialTesting.PROXY_LIST) {
                 HttpHost host = new HttpHost(proxyIp, 80);
-                for(i = 1; i <= threadPoolNum; ++i) {
+                for(i = 1; i <= concurrentNum; ++i) {
                     //这个list只是用来便于各线程提交当前执行进度
                     List<Integer> finishedVisitNum =  new ArrayList<Integer>();
                     finishedVisitNum.add(0);
@@ -236,19 +236,19 @@ public class DialTesting {
             resultJson.put("count500", this.count500);
             resultJson.put("countOther", this.countOther);
 
-//            StringBuffer buf = new StringBuffer();
-//            if (null != this.host) {
-//                buf.append("线程号：").append(currThreadIndex).append("\n代理Ip：" + this.host.getHostName());
-//                resultJson.put("proxyIp", this.host.getHostName());
-//            } else {
-//                buf.append("\n线程号：").append(currThreadIndex);
-//            }
-//            buf.append("\n开始时间：");
-//            buf.append(begin).append("\n结束时间：").append(end);
-//            buf.append("\n统计：count:[").append(this.totalCnt).append("]").append(", 200 OK count:[").append(this.count200Ok)
-//                    .append("], 403 count:[").append(this.count403).append("], 500 count:[")
-//                    .append(this.count500).append("], other count:[").append(this.countOther).append("]");
-
+            StringBuffer buf = new StringBuffer();
+            if (null != this.host) {
+                buf.append("线程号：").append(currThreadIndex).append("\n代理Ip：" + this.host.getHostName());
+                resultJson.put("proxyIp", this.host.getHostName());
+            } else {
+                buf.append("\n线程号：").append(currThreadIndex);
+            }
+            buf.append("\n开始时间：");
+            buf.append(begin).append("\n结束时间：").append(end);
+            buf.append("\n统计：count:[").append(this.totalCnt).append("]").append(", 200 OK count:[").append(this.count200Ok)
+                    .append("], 403 count:[").append(this.count403).append("], 500 count:[")
+                    .append(this.count500).append("], other count:[").append(this.countOther).append("]");
+            System.out.println(buf.toString());
             //FileUtil.appentContent2File(STOR_DIR + this.dayDir + File.separator + this.fileName, buf.toString());
 
         }

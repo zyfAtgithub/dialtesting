@@ -17,7 +17,7 @@
                 <div class="dial-form-item">
                     <label for="url">拨测url：</label>
                     <input id="url" required="required" class="dial-form-input dial-form-input-long dial-form-input-txt"
-                           type="text" value = "http://dxcdntest.ctdns.net/" width="700px" name="url"/>
+                           type="text" value = "http://cdntest.ctdns.net/" width="700px" name="url"/>
                 </div>
 
                 <div class="dial-form-item">
@@ -165,7 +165,7 @@
                 clearInterval(taskInterval);//停止之前的计时器，防止重复
                 var taskDiv = $("<div>[任务" + taskId + "] 拨测进行中。。</div>");
                 taskDiv.addClass("dial-task-progress");
-                taskDiv.attr("id", "dial-task-progress-" + taskId);
+                taskDiv.attr("id", "dial-task-progress-" + taskId.replace(/\./g, '_'));
                 $(".dial-detail").append(taskDiv);
             });
             //2s查询一次
@@ -185,7 +185,6 @@
                             var finishTaskCnt = 0;
                             $.each(result.taskMap, function (taskId, finishedVisitCnt) {
                                 taskCnt++;
-                                console.log(taskId);
                                 var arr = taskId.split('-');
                                 var dialCnt = 1;
                                 if (arr.length == 2) {
@@ -209,12 +208,12 @@
                                             + '</span><span class="dial-static-500">返回码500：' + resultJson.count500 + '</span>'
                                             + '<span class="dial-static-other">超时：' + resultJson.countOther + '</span>';
 
-                                            $("#dial-task-progress-" + taskId).html("[任务" + taskId + "]处理完成" + resultStatic);
+                                            $("#dial-task-progress-" + taskId.replace(/\./g, '_')).html("[任务" + taskId + "]处理完成" + resultStatic);
                                         }
                                     }
                                 }
                                 else {
-                                    $("#dial-task-progress-" + taskId).html("[任务" + taskId + "] 应请求 "+dialCnt+"次，" +
+                                    $("#dial-task-progress-" + taskId.replace(/\./g, '_')).html("[任务" + taskId + "] 应请求 "+dialCnt+"次，" +
                                         " 当前已完成请求 ["+finishedVisitCnt+"]次，完成百分比：" + finishPercent);
                                 }
                             });
