@@ -1,20 +1,16 @@
 package com.yf.dialtesting.util.http;
 
-import java.io.File;
+import com.yf.dialtesting.util.common.DateUtils;
+import com.yf.dialtesting.util.ip.ValidateUtil;
+import net.sf.json.JSONObject;
+import org.apache.http.HttpHost;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import com.yf.dialtesting.util.Constants;
-import com.yf.dialtesting.util.common.DateUtils;
-import com.yf.dialtesting.util.common.FileUtil;
-import com.yf.dialtesting.util.common.StringUtils;
-import com.yf.dialtesting.util.ip.ValidateUtil;
-import net.sf.json.JSONObject;
-import org.apache.http.HttpHost;
 
 public class DialTesting {
 
@@ -43,8 +39,8 @@ public class DialTesting {
     private static Map<String, List<Integer>> taskMap = new HashMap<String, List<Integer>>();
     private static Map<String, JSONObject> taskResultMap = new HashMap<String, JSONObject>();
 
-    //日志文件输出路径
-    private final String STOR_DIR = Constants.STOR_DIR;
+    //停止所有当前任务标识
+    private boolean stopAllTaskFLag = false;
 
     private int conTimeout;
     private int soTimeout;
@@ -57,7 +53,7 @@ public class DialTesting {
         return running;
     }
 
-    public synchronized void updateFindshedTaskCnt() {
+    public synchronized void updateFinishedTaskCnt() {
         finishedTaskCnt++;
         if (finishedTaskCnt == totalTaskCnt) {
             //所有任务都已运行完成
@@ -65,11 +61,18 @@ public class DialTesting {
         }
     }
 
+    public static String stopAllTask() {
+        getInstance().stopAllTaskFLag = true;
+        JSONObject jsonResult = new JSONObject();
+        jsonResult.put("result", "success");
+        return jsonResult.toString();
+    }
 
     public static String loadTaskProgress() {
         JSONObject jsonResult = new JSONObject();
         jsonResult.put("taskMap", taskMap);
         jsonResult.put("taskResultMap", taskResultMap);
+        System.out.println("你好sss啊");
         return jsonResult.toString();
     }
 
@@ -99,6 +102,7 @@ public class DialTesting {
         }
 
         dialTesting.running = true;
+        dialTesting.stopAllTaskFLag = false;
         finishedTaskCnt = 0;
         taskMap.clear();
         taskResultMap.clear();
@@ -156,13 +160,12 @@ public class DialTesting {
 
     public static void main(String[] args) {
         String url = "http://dxcdntest.ctdns.net/";
-//        String url = "http://cdntest.ctdns.net/";
         int dialCnt = 100;
         int interval = 1;
         int concurrentNum = 10;
         boolean proxyEnabled = false;
-        String proxList = "58.221.5.17";
-        String msg = dial(url, dialCnt, interval, concurrentNum, 1, 1, proxyEnabled, proxList);
+        String proxyList = "58.221.5.17";
+        String msg = dial(url, dialCnt, interval, concurrentNum, 1, 1, proxyEnabled, proxyList);
         System.out.println(msg);
 
     }
@@ -194,7 +197,7 @@ public class DialTesting {
             String currThreadIndex = this.fileName.substring(pos1 + 1, pos2);
             int cnt = 0;
             String begin = DateUtils.getNowTimeStr("yyyy-MM-dd HH:mm:ss.SSS");
-            while(cnt < dialCount) {
+            while(!stopAllTaskFLag && cnt < dialCount) {
                 JSONObject res = null;
                 ++cnt;
                 ++this.totalCnt;
@@ -208,12 +211,6 @@ public class DialTesting {
                 } else if (res.getString("statusCode").equals("999")) {
                     ++this.countOther;
                 }
-
-//                String content = "线程" + currThreadIndex + "第" + cnt + "次：" + res.getString("begin") + "\t" + res.getString("end") + "\t" + URL + "\t" + res.getString("cost") + "\t" + res.getString("statusCode");
-////                String content = "线程" + currThreadIndex + "（第" + cnt + "次访问）-->\t" + res.getString("begin") + "\t" + res.getString("end") + "\t" + URL + "\t" + res.getString("cost") + "\t" + res.getString("statusCode");
-//                if (null != this.host) {
-//                    content = content + "\tproxy:" + this.host.getHostName();
-//                }
 
                 try {
                     Thread.sleep(interval);
@@ -258,7 +255,7 @@ public class DialTesting {
             this.visit();
 
             //本次拨测任务执行完成
-            updateFindshedTaskCnt();
+            updateFinishedTaskCnt();
         }
     }
 }

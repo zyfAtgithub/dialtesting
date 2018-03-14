@@ -14,13 +14,29 @@ import java.util.HashMap;
 @Controller
 @EnableAutoConfiguration  
 public class App {
-      
-     @RequestMapping(value ="/home", method = RequestMethod.GET)
-     @ResponseBody
-    public String home(){
-        return "你好，Spring Boot";
+
+    /**
+     * 拨测客户端
+     * @param map
+     * @return
+     */
+    @RequestMapping("/")
+    public String dial(HashMap<String,Object> map){
+        return "dialtesting";
     }
 
+    /**
+     * 开始拨测任务
+     * @param url
+     * @param dialCnt
+     * @param interval
+     * @param concurrentNum
+     * @param conTimeout
+     * @param soTimeout
+     * @param proxyEnabled
+     * @param proxyList
+     * @return
+     */
     @RequestMapping(value ="/dial", method = RequestMethod.POST)
     @ResponseBody
     public String dial(@RequestParam("url")String url, @RequestParam("dialCnt")Integer dialCnt,
@@ -30,21 +46,29 @@ public class App {
         return DialTesting.dial(url, dialCnt, interval,  concurrentNum, conTimeout, soTimeout, proxyEnabled, proxyList);
     }
 
-    @RequestMapping("/")
-    public String dial(HashMap<String,Object> map){
-        return "dialtesting";
-    }
 
+    /**
+     * 查看拨测进度
+     * @return
+     */
     @RequestMapping(value ="/qryTaskProgress", method = RequestMethod.GET)
     @ResponseBody
     public String qryTaskProgress(){
         return DialTesting.loadTaskProgress();
     }
 
+    /**
+     * 停止所有正在进行的拨测任务
+     * @return
+     */
+    @RequestMapping(value ="/stopAllTask", method = RequestMethod.POST)
+    @ResponseBody
+    public String stopAllTask(){
+        return DialTesting.stopAllTask();
+    }
 
-    public static void main(String[] args){  
+    public static void main(String[] args){
         SpringApplication.run(App.class, args);
-          
-    }  
+    }
 
 }

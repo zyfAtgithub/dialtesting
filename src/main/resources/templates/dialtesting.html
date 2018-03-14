@@ -3,87 +3,144 @@
 <head>
     <title>拨测客户端</title>
     <link rel="stylesheet" th:href="@{/css/dial.css}" />
+    <link rel="stylesheet" th:href="@{/framework/layui/css/layui.css}" />
     <script type="text/javascript" th:src="@{/js/jquery-2.2.4.js}"></script>
 
 
 </head>
 <body>
-    <div class="dial-container">
-        <div class="dial-title">
-            拨测设置
-        </div>
-        <div class="dial-content">
-            <form action="#" method="post" onsubmit="return submitDial();">
-                <div class="dial-form-item">
-                    <label for="url">拨测url：</label>
-                    <input id="url" required="required" class="dial-form-input dial-form-input-long dial-form-input-txt"
-                           type="text" value = "http://cdntest.ctdns.net/" width="700px" name="url"/>
+<div class="dial-container">
+    <div class="layui-container">
+        <div class="layui-row">
+            <div class="layui-col-md4 dial-left-setting">
+                <div class="dial-title layui-bg-cyan">
+                    拨测参数设置&nbsp;<i class="layui-icon">&#xe614;</i>
+                </div>
+                <div class="dial-left-setting-panel">
+                    <form class="layui-form layui-form-pane" action="">
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">访问URL</label>
+                            <div class="layui-input-block">
+                                <input type="text" name="url" required  lay-verify="required|url" placeholder="请输入URL"
+                                       value="http://www.baidu.com/" autocomplete="off" class="layui-input" >
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">拨测次数</label>
+                            <div class="layui-input-block">
+                                <input type="text" name="dialCnt" required lay-verify="required|number" placeholder="请输入次数"
+                                       autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">间隔(ms)</label>
+                            <div class="layui-input-block">
+                                <input type="text" name="interval" required lay-verify="required|number" placeholder="请输入每次访问间隔"
+                                       autocomplete="off" class="layui-input"/>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">并发数</label>
+                            <div class="layui-input-block">
+                                <input type="text" name="concurrentNum" required lay-verify="required|number" placeholder="请输入并发数"
+                                       autocomplete="off" class="layui-input"/>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">连接超时</label>
+                            <div class="layui-input-block">
+                                <input type="text" name="conTimeout" required lay-verify="required|number" placeholder="请输入连接超时(ms)"
+                                       autocomplete="off" class="layui-input"/>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">传输超时</label>
+                            <div class="layui-input-block">
+                                <input type="text" name="soTimeout" required lay-verify="required|number" placeholder="请输入传输超时(ms)"
+                                       autocomplete="off" class="layui-input"/>
+                            </div>
+                        </div>
+                        <div class="layui-form-item" pane>
+                            <label class="layui-form-label">使用代理IP</label>
+                            <div class="layui-input-block">
+                                <input type="checkbox" lay-filter="proxyEnabled" name="proxyEnabled"
+                                       lay-skin="switch" lay-text="是|否">
+                            </div>
+                        </div>
+                        <div class="layui-form-item layui-form-text dial-hidde" id="proxy-list">
+                            <label class="layui-form-label">代理IP列表</label>
+                            <div class="layui-input-block">
+                                <textarea name="proxyList" placeholder="请输入代理IP，一行一个" class="layui-textarea"></textarea>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <button class="layui-btn" lay-submit="" lay-filter="formDemoPane">立即提交</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="layui-col-md8 dial-right-task">
+                <div class="dial-title layui-bg-green">
+                    任务状态&nbsp;<i class="layui-icon">&#xe60e;</i>
+                </div>
+                <div class="dial-right-task-panel">
+                    <!--<i class="layui-icon" style="color: #008000;">&#xe617;</i>  任务进行中-->
+                    无任务进行
                 </div>
 
-                <div class="dial-form-item">
-                    <label for="dialCnt">拨测次数：</label>
-                    <input id="dialCnt" class="dial-form-input dial-form-input-txt"
-                           type="number" value="1" name="dialCnt"/>
+                <div class="dial-title layui-bg-green">
+                    任务详情&nbsp;<i class="layui-icon">&#xe63c;</i>
                 </div>
-
-                <div class="dial-form-item">
-                    <label for="interval">每次间隔(ms)：</label>
-                    <input id="interval" class="dial-form-input dial-form-input-txt"
-                           type="number" value="1" name="interval"/>
+                <div class="dial-right-task-panel">
+                    <!--无-->
+                    <div class="dial-right-task-detail">
+                        <div class="dial-task-name">1000-1</div>
+                        <div class="dial-task-ip">
+                            42.123.92.9
+                        </div>
+                        <hr>
+                        <div class="dial-task-visitcnt">
+                            <span class="dial-task-visitcnt-tip">拨测总数</span>1000
+                        </div>
+                        <div class="dial-task-visitcnt">
+                            <span class="dial-task-visitcnt-tip">成功拨测数</span>324
+                        </div>
+                        <hr>
+                        <div class="dial-task-rspcode">
+                            <span class="dial-task-rspcode-tip">返回码200</span>276
+                        </div>
+                        <div class="dial-task-rspcode">
+                            <span class="dial-task-rspcode-tip">返回码403</span>26
+                        </div>
+                        <div class="dial-task-rspcode">
+                            <span class="dial-task-rspcode-tip">返回码500</span>2
+                        </div>
+                        <div class="dial-task-rspcode">
+                            <span class="dial-task-rspcode-tip">其他返回码</span>4
+                        </div>
+                    </div>
                 </div>
-
-                <div class="dial-form-item">
-                    <label for="concurrentNum">并发数：</label>
-                    <input id="concurrentNum" class="dial-form-input dial-form-input-txt"
-                           type="number" value="1" name="concurrentNum"/>
-                </div>
-
-                <div class="dial-form-item">
-                    <label for="conTimeout">连接超时（ms）：</label>
-                    <input id="conTimeout" class="dial-form-input dial-form-input-txt"
-                           type="number" value="2000" name="conTimeout"/>
-                </div>
-
-                <div class="dial-form-item">
-                    <label for="soTimeout">传输超时（ms）：</label>
-                    <input id="soTimeout" class="dial-form-input dial-form-input-txt"
-                           type="number" value="3000" name="soTimeout"/>
-                </div>
-
-                <div class="dial-form-item">
-                    <label for="proxyEnabled">启用代理：</label>
-                    <input id="proxyEnabled" class="dial-form-input dial-form-input-txt"
-                           type="checkbox" name="proxyEnabled"/>
-
-                </div>
-
-
-                <div class="dial-form-item dial-hidde" id="proxy-list">
-                    <label for="proxyList">代理IP列表(一行一个)：</label><br>
-                    <textarea id="proxyList" class="dial-form-input dial-form-input-txtarea" name="proxyList"></textarea>
-                </div>
-
-                <div class="dial-form-item">
-                    <button type="submit">提交</button>
-                </div>
-            </form>
-
-        </div>
-
-        <div class="dial-title">
-            服务器响应
-        </div>
-        <div class="dial-content dial-server-resp">
-            无
-        </div>
-
-        <div class="dial-title">
-            拨测状态
-        </div>
-        <div class="dial-content dial-detail">
+            </div>
         </div>
     </div>
+</div>
 
+    <script th:src="@{/framework/layui/layui.all.js}"></script>
+    <script>
+        layui.use(['form'], function(){
+            var form = layui.form;
+            form.on('switch(proxyEnabled)', function(data){
+                var proxyEnabled = data.elem.checked;//开关是否开启，true或者false
+                if (proxyEnabled) {
+                    $("#proxy-list").show();
+                }
+                else {
+                    //$(".layui-textarea").val('');
+                    $("#proxy-list").hide();
+                }
+            });
+        });
+    </script>
     <script>
 
         var taskInterval = {};
