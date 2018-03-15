@@ -29,35 +29,35 @@
                             <label class="layui-form-label">拨测次数</label>
                             <div class="layui-input-block">
                                 <input type="text" name="dialCnt" required lay-verify="required|number" placeholder="请输入次数"
-                                       autocomplete="off" class="layui-input">
+                                       value="10" autocomplete="off" class="layui-input">
                             </div>
                         </div>
                         <div class="layui-form-item">
                             <label class="layui-form-label">间隔(ms)</label>
                             <div class="layui-input-block">
                                 <input type="text" name="interval" required lay-verify="required|number" placeholder="请输入每次访问间隔"
-                                       autocomplete="off" class="layui-input"/>
+                                       value="5" autocomplete="off" class="layui-input"/>
                             </div>
                         </div>
                         <div class="layui-form-item">
                             <label class="layui-form-label">并发数</label>
                             <div class="layui-input-block">
                                 <input type="text" name="concurrentNum" required lay-verify="required|number" placeholder="请输入并发数"
-                                       autocomplete="off" class="layui-input"/>
+                                       value="1" autocomplete="off" class="layui-input"/>
                             </div>
                         </div>
                         <div class="layui-form-item">
                             <label class="layui-form-label">连接超时</label>
                             <div class="layui-input-block">
                                 <input type="text" name="conTimeout" required lay-verify="required|number" placeholder="请输入连接超时(ms)"
-                                       autocomplete="off" class="layui-input"/>
+                                       value="2000" autocomplete="off" class="layui-input"/>
                             </div>
                         </div>
                         <div class="layui-form-item">
                             <label class="layui-form-label">传输超时</label>
                             <div class="layui-input-block">
                                 <input type="text" name="soTimeout" required lay-verify="required|number" placeholder="请输入传输超时(ms)"
-                                       autocomplete="off" class="layui-input"/>
+                                       value="3000" autocomplete="off" class="layui-input"/>
                             </div>
                         </div>
                         <div class="layui-form-item" pane>
@@ -74,7 +74,7 @@
                             </div>
                         </div>
                         <div class="layui-form-item">
-                            <button class="layui-btn" lay-submit="" lay-filter="formDemoPane">立即提交</button>
+                            <button class="layui-btn layui-btn-normal" lay-submit lay-filter="formDispatch">下发</button>
                         </div>
                     </form>
                 </div>
@@ -95,28 +95,26 @@
                     <!--无-->
                     <div class="dial-right-task-detail">
                         <div class="dial-task-name">1000-1</div>
-                        <div class="dial-task-ip">
+                        <div class="dial-task-ip ">
                             42.123.92.9
                         </div>
-                        <hr>
-                        <div class="dial-task-visitcnt">
-                            <span class="dial-task-visitcnt-tip">拨测总数</span>1000
-                        </div>
-                        <div class="dial-task-visitcnt">
-                            <span class="dial-task-visitcnt-tip">成功拨测数</span>324
+                        <div class="dial-task-time">
+                            2018-03-14 12:23:12.9756
                         </div>
                         <hr>
-                        <div class="dial-task-rspcode">
-                            <span class="dial-task-rspcode-tip">返回码200</span>276
+
+                        <div class="dial-task-visitcnt">
+                            <span class="dial-task-visitcnt-tip">拨测总数</span>10000
                         </div>
-                        <div class="dial-task-rspcode">
-                            <span class="dial-task-rspcode-tip">返回码403</span>26
+                        <div class="dial-task-visitcnt">
+                            <span class="dial-task-visitcnt-tip">成功拨测数</span>32400
                         </div>
-                        <div class="dial-task-rspcode">
-                            <span class="dial-task-rspcode-tip">返回码500</span>2
+                        <div class="layui-progress dial-task-progress" lay-filter="dial-task-progress-1" lay-showPercent="yes">
+                            <div class="layui-progress-bar layui-bg-orange" lay-percent="45.5%"></div>
                         </div>
-                        <div class="dial-task-rspcode">
-                            <span class="dial-task-rspcode-tip">其他返回码</span>4
+                        <hr>
+                        <div style="text-align: center">
+                            <button id="showDetail" class="layui-btn layui-btn-xs layui-btn-primary layui-btn-disabled">查看详情</button>
                         </div>
                     </div>
                 </div>
@@ -127,35 +125,57 @@
 
     <script th:src="@{/framework/layui/layui.all.js}"></script>
     <script>
-        layui.use(['form'], function(){
+        layui.use(['form', 'element'], function(){
             var form = layui.form;
+            var element = layui.element;
             form.on('switch(proxyEnabled)', function(data){
                 var proxyEnabled = data.elem.checked;//开关是否开启，true或者false
                 if (proxyEnabled) {
                     $("#proxy-list").show();
                 }
                 else {
-                    //$(".layui-textarea").val('');
                     $("#proxy-list").hide();
                 }
+            });
+
+            form.on('submit(formDispatch)', function (data) {
+                layer.msg(JSON.stringify(data.field));
+                return false;
+            });
+            $("#showDetail").on('click', function () {
+                var that = this;
+                var content = '<div class="dial-task-rspcode">' +
+                    '    <span class="dial-task-rspcode-tip">返回码200</span>' +
+                    '    <span class="layui-badge layui-bg-green">27600</span>' +
+                    '</div>' +
+                    '<div class="dial-task-rspcode">' +
+                    '    <span class="dial-task-rspcode-tip">返回码403</span>' +
+                    '    <span class="layui-badge layui-bg-orange">12</span>' +
+                    '</div>' +
+                    '<div class="dial-task-rspcode">' +
+                    '    <span class="dial-task-rspcode-tip">返回码500</span>' +
+                    '    <span class="layui-badge">66</span>' +
+                    '</div>' +
+                    '<div class="dial-task-rspcode">' +
+                    '    <span class="dial-task-rspcode-tip">超时</span>' +
+                    '    <span class="layui-badge-rim">5</span>' +
+                    '</div>'
+                layer.tips(content, that, {
+                    tips: [3, '#43CBFF']
+                });
+
+                setTimeout(function(){element.progress('dial-task-progress-1', '58.9%');},1000);
+                setTimeout(function(){element.progress('dial-task-progress-1', '66.2%');},2000);
+                setTimeout(function(){element.progress('dial-task-progress-1', '73.3%');},3000);
+                setTimeout(function(){element.progress('dial-task-progress-1', '85.4%');},4000);
+                setTimeout(function(){element.progress('dial-task-progress-1', '99.8%');},5000);
+                setTimeout(function(){element.progress('dial-task-progress-1', '100%');},6000);
             });
         });
     </script>
     <script>
 
         var taskInterval = {};
-        $(function(){
-            $("#proxyEnabled").change(function () {
-                var checked = $(this).is(':checked');
-                console.log();
-                if (checked) {
-                    $("#proxy-list").show();
-                }
-                else {
-                    $("#proxy-list").hide();
-                }
-            });
-        });
 
         function submitDial() {
             var url = $("#url").val();

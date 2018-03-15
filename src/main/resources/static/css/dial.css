@@ -50,8 +50,8 @@ body{
     position: relative;
     border: 1px solid #B2B2B2;
     border-radius: 5px;
-    width: 220px;
-    height: 240px;
+    width: 180px;
+    height: 220px;
     display: inline-block;
     vertical-align: top;
     margin: 2px;
@@ -72,20 +72,34 @@ body{
     text-align: center;
 }
 
+.dial-task-time {
+    margin-top: 8px;
+    font-size: 13px;
+    color: #666666;
+    text-align: center;
+}
+
 .dial-task-visitcnt-tip {
     font-size: 14px;
     color: #999999;
     margin-right: 6px;
+    font-weight: normal;
 }
 .dial-task-visitcnt {
     padding-left: 25px;
     font-size: 20px;
-    color: #32434f;
+    color: #1E9FFF;
+    font-weight: bold;
+}
+
+.dial-task-progress{
+    margin-top: 25px;
 }
 
 .dial-task-rspcode-tip {
     font-size: 14px;
-    color: #999999;
+    color: white;
+    font-weight: bold;
     margin-right: 6px;
 }
 .dial-task-rspcode {

@@ -1,5 +1,6 @@
 package com.yf.dialtesting;
 
+import com.yf.dialtesting.model.DialTestingInfo;
 import com.yf.dialtesting.util.http.DialTesting;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -25,6 +26,27 @@ public class App {
         return "dialtesting";
     }
 
+//    /**
+//     * 开始拨测任务
+//     * @param url
+//     * @param dialCnt
+//     * @param interval
+//     * @param concurrentNum
+//     * @param conTimeout
+//     * @param soTimeout
+//     * @param proxyEnabled
+//     * @param proxyList
+//     * @return
+//     */
+//    @RequestMapping(value ="/dial", method = RequestMethod.POST)
+//    @ResponseBody
+//    public String dial(@RequestParam("url")String url, @RequestParam("dialCnt")Integer dialCnt,
+//                       @RequestParam("interval")Integer interval, @RequestParam("concurrentNum")Integer concurrentNum,
+//                       @RequestParam("conTimeout")Integer conTimeout,@RequestParam("soTimeout")Integer soTimeout,
+//                       @RequestParam("proxyEnabled")Boolean proxyEnabled, @RequestParam("proxyList")String proxyList){
+//        return DialTesting.dial(url, dialCnt, interval,  concurrentNum, conTimeout, soTimeout, proxyEnabled, proxyList);
+//    }
+
     /**
      * 开始拨测任务
      * @param url
@@ -39,11 +61,8 @@ public class App {
      */
     @RequestMapping(value ="/dial", method = RequestMethod.POST)
     @ResponseBody
-    public String dial(@RequestParam("url")String url, @RequestParam("dialCnt")Integer dialCnt,
-                       @RequestParam("interval")Integer interval, @RequestParam("concurrentNum")Integer concurrentNum,
-                       @RequestParam("conTimeout")Integer conTimeout,@RequestParam("soTimeout")Integer soTimeout,
-                       @RequestParam("proxyEnabled")Boolean proxyEnabled, @RequestParam("proxyList")String proxyList){
-        return DialTesting.dial(url, dialCnt, interval,  concurrentNum, conTimeout, soTimeout, proxyEnabled, proxyList);
+    public String dial(DialTestingInfo dialTestingInfo){
+        return DialTesting.dial(dialTestingInfo);
     }
 
 

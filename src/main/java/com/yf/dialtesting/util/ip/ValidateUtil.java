@@ -26,12 +26,11 @@ public class ValidateUtil {
         return IP_PATTERN.matcher(ipStr).matches();
     }
 
-    public static boolean validateIpList(String ipStr, String separator) {
-        if (StringUtils.isNullOrEmpty(ipStr)) {
+    public static boolean validateIpList(List<String> ipList, String separator) {
+        if (ipList == null || ipList.isEmpty()) {
             return false;
         }
-        String[] ipArr = ipStr.split(separator);
-        for (String ip : ipArr) {
+        for (String ip : ipList) {
             if (!IP_PATTERN.matcher(ip).matches()) {
                 return false;
             }
@@ -49,7 +48,9 @@ public class ValidateUtil {
 
     public static void main(String[] args) {
         System.out.println(validateIp("249.202.1.0"));
-        System.out.println(validateIpList("58.212.181.96", ","));
+        List<String> ipList = new ArrayList<String>();
+        ipList.add("58.212.181.96");
+        System.out.println(validateIpList(ipList, ","));
         System.out.println(validateUrl("https://a.c.b"));
         System.out.println(validateUrl("http://www.osyunwei.com/archives/789.html"));
 
