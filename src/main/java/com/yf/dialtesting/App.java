@@ -5,10 +5,7 @@ import com.yf.dialtesting.util.http.DialTesting;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestMapping;  
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 
@@ -49,19 +46,12 @@ public class App {
 
     /**
      * 开始拨测任务
-     * @param url
-     * @param dialCnt
-     * @param interval
-     * @param concurrentNum
-     * @param conTimeout
-     * @param soTimeout
-     * @param proxyEnabled
-     * @param proxyList
+     * @param dialTestingInfo
      * @return
      */
     @RequestMapping(value ="/dial", method = RequestMethod.POST)
     @ResponseBody
-    public String dial(DialTestingInfo dialTestingInfo){
+    public String dial(@RequestBody DialTestingInfo dialTestingInfo){
         return DialTesting.dial(dialTestingInfo);
     }
 

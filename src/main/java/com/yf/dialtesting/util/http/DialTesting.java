@@ -69,6 +69,7 @@ public class DialTesting {
         JSONObject jsonResult = new JSONObject();
         jsonResult.put("taskMap", taskMap);
         jsonResult.put("taskResultMap", taskResultMap);
+        jsonResult.put("dialTestingInfo", currentDialTestingInfo);
         return jsonResult.toString();
     }
 
@@ -91,7 +92,7 @@ public class DialTesting {
         if (dialTesting.isRunning()) {
             //正在进行拨测，请稍后。。。
             jsonResult.put("resultCode", "1");
-            jsonResult.put("msg", "有拨测任务正在进行，请稍后。。。");
+            jsonResult.put("msg", "有拨测任务正在进行，请稍后...");
             jsonResult.put("taskIdList", taskMap.keySet());
             jsonResult.put("dialTestingInfo", currentDialTestingInfo);
             return jsonResult.toString();
@@ -119,9 +120,9 @@ public class DialTesting {
                     List<Integer> finishedVisitNum =  new ArrayList<Integer>();
                     finishedVisitNum.add(0);//完成数
                     finishedVisitNum.add(0);//成功访问数，返回码200
-                    taskMap.put(host.getHostName() + "-" + currentDialTestingInfo.getDialCount() + "-" + i, finishedVisitNum);
+                    taskMap.put(host.getHostName() + "-" + i, finishedVisitNum);
                     JSONObject json = new JSONObject();
-                    taskResultMap.put(host.getHostName() + "-" + currentDialTestingInfo.getDialCount() + "-" + i, json);
+                    taskResultMap.put(host.getHostName() + "-" + i, json);
                     executorService.execute(dialTesting.new VisitTask(finishedVisitNum, host.getHostName() + "-" + i + ".txt", host, json));
                 }
             }
@@ -135,9 +136,9 @@ public class DialTesting {
                 List<Integer> finishedVisitNum =  new ArrayList<Integer>();
                 finishedVisitNum.add(0);//完成数
                 finishedVisitNum.add(0);//成功访问数，返回码200
-                taskMap.put(currentDialTestingInfo.getDialCount() + "-" + i, finishedVisitNum);
+                taskMap.put(i + "", finishedVisitNum);
                 JSONObject json = new JSONObject();
-                taskResultMap.put(currentDialTestingInfo.getDialCount() + "-" + i, json);
+                taskResultMap.put(i + "", json);
                 executorService.execute(dialTesting.new VisitTask(finishedVisitNum, i + ".txt", (HttpHost)null, json));
             }
             executorService.shutdown();
@@ -145,8 +146,9 @@ public class DialTesting {
 
         //将所有线程信息返回
         jsonResult.put("taskIdList", taskMap.keySet());
+        jsonResult.put("dialTestingInfo", currentDialTestingInfo);
         jsonResult.put("resultCode", "0");
-        jsonResult.put("msg", "拨测任务已创建，请查看运行情况。。");
+        jsonResult.put("msg", "拨测任务已创建，请查看运行情况...");
         return jsonResult.toString();
     }
 

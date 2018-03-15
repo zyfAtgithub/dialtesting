@@ -28,7 +28,7 @@
                         <div class="layui-form-item">
                             <label class="layui-form-label">拨测次数</label>
                             <div class="layui-input-block">
-                                <input type="text" name="dialCnt" required lay-verify="required|number" placeholder="请输入次数"
+                                <input type="text" name="dialCount" required lay-verify="required|number" placeholder="请输入次数"
                                        value="10" autocomplete="off" class="layui-input">
                             </div>
                         </div>
@@ -85,15 +85,15 @@
                 </div>
                 <div class="dial-right-task-panel">
                     <!--<i class="layui-icon" style="color: #008000;">&#xe617;</i>  任务进行中-->
-                    无任务进行
+                    <div class="dial-task-status dial-noactive">无任务进行</div>
                 </div>
 
                 <div class="dial-title layui-bg-green">
                     任务详情&nbsp;<i class="layui-icon">&#xe63c;</i>
                 </div>
-                <div class="dial-right-task-panel">
-                    <!--无-->
-                    <div class="dial-right-task-detail">
+                <div class="dial-right-task-panel task-detail-list">
+                    无
+                    <!--<div class="dial-right-task-detail">
                         <div class="dial-task-name">1000-1</div>
                         <div class="dial-task-ip ">
                             42.123.92.9
@@ -116,7 +116,7 @@
                         <div style="text-align: center">
                             <button id="showDetail" class="layui-btn layui-btn-xs layui-btn-primary layui-btn-disabled">查看详情</button>
                         </div>
-                    </div>
+                    </div>-->
                 </div>
             </div>
         </div>
@@ -125,7 +125,9 @@
 
     <script th:src="@{/framework/layui/layui.all.js}"></script>
     <script>
-        layui.use(['form', 'element'], function(){
+        layui.use(['jquery', 'form', 'element'], function(){
+            var taskInterval = {};
+            var $ = layui.$;
             var form = layui.form;
             var element = layui.element;
             form.on('switch(proxyEnabled)', function(data){
@@ -139,9 +141,187 @@
             });
 
             form.on('submit(formDispatch)', function (data) {
-                layer.msg(JSON.stringify(data.field));
+                data.field.proxyEnabled = data.field.proxyEnabled == 'on';
+                var proxyIPList = [];
+                if (data.field.proxyEnabled) {
+                    var proxyList = data.field.proxyList;
+                    if (!proxyList) {
+                        layer.msg('代理IP列表不能为空', {icon: 5, anim: 6});
+                        return false;
+                    }
+                    var proxyIPArr = proxyList.split('\n');
+                    var erroIndex = -1;
+                    $.each(proxyIPArr, function (index, ip) {
+                        if (checkIPV4(ip)) {
+                            proxyIPList.push(ip);
+                        }
+                        else {
+                            erroIndex = index;
+                            return false;
+                        }
+                    });
+                    if (erroIndex != -1) {
+                        layer.msg('第'+ (++erroIndex) + '行不是有效的IP', {icon: 5, anim: 6});
+                        return false;
+                    }
+                }
+                data.field.proxyList = proxyIPList;
+
+                $.ajax({
+                    url:"dial",
+                    type:"POST",
+                    contentType:"application/json",
+                    data:JSON.stringify(data.field),
+                    dataType:"json",
+                    success:function (res) {
+                        var code = res.resultCode;
+                        var msg = res.msg;
+                        var html = "信息：" + msg;
+                        $('.dial-task-status').removeClass('dial-noactive');
+                        $(".dial-task-status").removeClass("dial-active");
+                        $(".dial-task-status").removeClass("dial-running");
+                        if (code == 0) {
+                            $('.dial-task-status').addClass('dial-active');
+                        }
+                        if (code != 0) {
+                            $(".dial-task-status").removeClass("dial-active");
+                            $(".dial-task-status").addClass("dial-running");
+                        }
+                        $('.dial-task-status').html(html);
+
+                        //服务端有任务信息返回，向服务器请求获取拨测任务执行进度
+                        if (res.taskIdList && res.dialTestingInfo) {
+                            //$(".task-detail-list").html('');
+                            queryTaskProgress(res.taskIdList, res.dialTestingInfo);
+                        }
+                    },
+                    error:function(xhr,textStatus){
+                        console.log('服务器处理出错');
+                        console.log(xhr)
+                        console.log(textStatus)
+                    }
+                });
+
                 return false;
             });
+
+            function checkIPV4(ip) {
+                var reg = /^(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$/
+                return reg.test(ip);
+            }
+
+
+            /**
+             * 查看拨测任务处理进度
+             * @param taskIdList
+             */
+            function queryTaskProgress(taskIdList, dialTestingInfo) {
+                clearInterval(taskInterval);//停止之前的计时器，防止重复
+                $.each(taskIdList, function (index, taskId) {
+                    addDialTaskDetail(taskId, dialTestingInfo);
+                });
+                //2s查询一次
+                taskInterval = setInterval(function(){qrySingleTaskProgress()}, 2000);
+            }
+
+            function addDialTaskDetail(taskId, dialTestingInfo) {
+                var proxyIp = '';
+                var arr = taskId.split('-');
+                if (arr.length == 2) {
+                    proxyIp = arr[1];
+                }
+                var dialCount = dialTestingInfo.dialCount;
+                var taskDetailDiv = $('<div class="dial-right-task-detail">' +
+                    '                        <div class="dial-task-name">'+taskId+'</div>' +
+                    '                        <div class="dial-task-ip ">' + proxyIp +
+                    '                        </div>' +
+                    '                        <div class="dial-task-time">' +
+                    '                        </div>' +
+                    '                        <hr>' +
+                    '                        <div class="dial-task-visitcnt">' +
+                    '                            <span class="dial-task-visitcnt-tip">拨测总数</span>' + dialTestingInfo.dialCount +
+                    '                        </div>' +
+                    '                        <div class="dial-task-visitcnt">' +
+                    '                            <span class="dial-task-visitcnt-tip">成功拨测数</span><span id="dial-succ-cnt-'+taskId.replace(/\./g, '_')+'">0</span>' +
+                    '                        </div>' +
+                    '                        <div class="layui-progress dial-task-progress"  lay-showPercent="yes">' +
+                    '                            <div class="layui-progress-bar layui-bg-orange" lay-percent="20%"></div>' +
+                    '                        </div>' +
+                    '                        <hr>' +
+                    '                        <div style="text-align: center">' +
+                    '                            <button id="showDetail" class="layui-btn layui-btn-xs layui-btn-primary layui-btn-disabled">查看详情</button>' +
+                    '                        </div>' +
+                    '                    </div>');
+                //lay-filter="ssfilter-dial-task-progress-'+taskId.replace(/\./g, '_')+'"
+                taskDetailDiv.attr("id", "dial-task-progress-" + taskId.replace(/\./g, '_'));
+                $('.task-detail-list').append(taskDetailDiv);
+            }
+
+            function qrySingleTaskProgress() {
+                $.ajax({
+                    url:"qryTaskProgress",
+                    type:"get",
+                    data:{},
+                    dataType:"json",
+                    success:function (result) {
+                        if (result) {
+                            if (result.taskMap && result.taskResultMap && result.dialTestingInfo) {
+                                var taskCnt = 0;
+                                var finishTaskCnt = 0;
+                                $.each(result.taskMap, function (taskId, finishedVisitList) {
+                                    taskCnt++;
+                                    var arr = taskId.split('-');
+                                    var dialCount = result.dialTestingInfo.dialCount;
+                                    var proxyIp = '';
+                                    var arr = taskId.split('-');
+                                    if (arr.length == 2) {
+                                        proxyIp = arr[1];
+                                    }
+                                    var finishedVisitCnt = finishedVisitList[0];
+                                    var successVisitCnt = finishedVisitList[1];
+                                    var mmm = $("#dial-succ-cnt-" + taskId.replace(/\./g, '_')).html(successVisitCnt);
+                                    //.children(".dial-succ-cnt").html(successVisitCnt);
+                                    var finishPercent = (finishedVisitCnt * 100 / parseInt(dialCount)).toFixed(2) + '%';
+
+                                    element.progress('filter-dial-task-progress-' + taskId.replace(/\./g, '_'), '22%');
+
+                                    if (finishedVisitCnt == dialCount) {
+//                                        //此线程已完成所有访问请求
+                                        finishTaskCnt++;
+                                        if (result.taskResultMap) {
+                                            var resultJson = result.taskResultMap[taskId];
+//                                            if (resultJson) {
+//                                                resultStatic += '<br>时间：' + resultJson.begin
+//                                                    + ' ~ ' + resultJson.end + '<br><span class="dial-static-total">总访问量数：' + resultJson.totalCnt
+//                                                    + '</span><span class="dial-static-200">返回码200：' + resultJson.count200Ok + '</span>'
+//                                                    + '<span class="dial-static-403">返回码403：' + resultJson.count403
+//                                                    + '</span><span class="dial-static-500">返回码500：' + resultJson.count500 + '</span>'
+//                                                    + '<span class="dial-static-other">超时：' + resultJson.countOther + '</span>';
+//
+//                                                $("#dial-task-progress-" + taskId.replace(/\./g, '_')).html("[任务" + taskId + "]处理完成" + resultStatic);
+//                                            }
+                                        }
+                                    }
+//                                    else {
+//                                        $("#dial-task-progress-" + taskId.replace(/\./g, '_')).html("[任务" + taskId + "] 应请求 "+dialCnt+"次，" +
+//                                            " 当前已完成请求 ["+finishedVisitCnt+"]次，完成百分比：" + finishPercent);
+//                                    }
+                                });
+//                                if (finishTaskCnt == taskCnt) {
+//                                    //停止计时器
+//                                    clearInterval(taskInterval);
+//                                }
+                            }
+                        }
+                    },
+                    error:function (xhr,textStatus) {
+                        console.log('服务器处理出错');
+                        console.log(xhr)
+                        console.log(textStatus)
+                    }
+                });
+            }
+
             $("#showDetail").on('click', function () {
                 var that = this;
                 var content = '<div class="dial-task-rspcode">' +
@@ -186,6 +366,11 @@
             var soTimeout = $("#soTimeout").val();
             var proxyEnabled = $("#proxyEnabled").is(":checked");
             var proxyList = $("#proxyList").val();
+
+            if (proxyEnabled) {
+
+                proxyList.replace(/\r\n/g, ',').replace(/\n/g, ',');
+            }
             var data = {};
             data.url = url;
             data.dialCnt = dialCnt;

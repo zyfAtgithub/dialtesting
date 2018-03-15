@@ -44,6 +44,22 @@ body{
     border-radius: 3px;
 }
 
+.dial-task-status {
+    font-size: 14px;
+    font-weight: bolder;
+}
+
+.dial-noactive {
+    color: #999999;
+}
+
+.dial-active {
+    color: #13b700;
+}
+.dial-running {
+    color: #FD482C;
+}
+
 /** 任务详情*/
 .dial-right-task-detail {
     padding: 4px 3px;
