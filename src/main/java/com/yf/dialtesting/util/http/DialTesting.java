@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class DialTesting {
 
@@ -45,6 +46,9 @@ public class DialTesting {
 
     //停止所有当前任务标识
     private boolean stopAllTaskFLag = false;
+
+    //原子计数器，用于任务id的获取
+    AtomicInteger atomicTaskId = new AtomicInteger(1);
 
     private synchronized boolean isRunning() {
         return running;
@@ -105,7 +109,7 @@ public class DialTesting {
         taskResultMap.clear();
         int threadPoolNum = dialTestingInfo.getConcurrentNum();
         currentDialTestingInfo = dialTestingInfo;
-
+        dialTesting.atomicTaskId.set(1);
         ExecutorService executorService;
         int i;
         if (currentDialTestingInfo.isProxyEnabled()) {
@@ -116,14 +120,15 @@ public class DialTesting {
             for (String proxyIp : currentDialTestingInfo.getProxyList()) {
                 HttpHost host = new HttpHost(proxyIp, 80);
                 for(i = 1; i <= currentDialTestingInfo.getConcurrentNum(); ++i) {
+                    int taskId = dialTesting.atomicTaskId.getAndIncrement();
                     //这个list只是用来便于各线程提交当前执行进度
                     List<Integer> finishedVisitNum =  new ArrayList<Integer>();
                     finishedVisitNum.add(0);//完成数
                     finishedVisitNum.add(0);//成功访问数，返回码200
-                    taskMap.put(host.getHostName() + "-" + i, finishedVisitNum);
+                    taskMap.put(host.getHostName() + "-" + taskId, finishedVisitNum);
                     JSONObject json = new JSONObject();
-                    taskResultMap.put(host.getHostName() + "-" + i, json);
-                    executorService.execute(dialTesting.new VisitTask(finishedVisitNum, host.getHostName() + "-" + i + ".txt", host, json));
+                    taskResultMap.put(host.getHostName() + "-" + taskId, json);
+                    executorService.execute(dialTesting.new VisitTask(finishedVisitNum, host.getHostName() + "-" + taskId + ".txt", host, json));
                 }
             }
             executorService.shutdown();
@@ -132,14 +137,15 @@ public class DialTesting {
             totalTaskCnt = threadPoolNum;
             executorService = Executors.newFixedThreadPool(threadPoolNum + 1);
             for(i = 1; i <= threadPoolNum; ++i) {
+                int taskId = dialTesting.atomicTaskId.getAndIncrement();
                 //这个list只是用来便于各线程提交当前执行进度
                 List<Integer> finishedVisitNum =  new ArrayList<Integer>();
                 finishedVisitNum.add(0);//完成数
                 finishedVisitNum.add(0);//成功访问数，返回码200
-                taskMap.put(i + "", finishedVisitNum);
+                taskMap.put(taskId + "", finishedVisitNum);
                 JSONObject json = new JSONObject();
-                taskResultMap.put(i + "", json);
-                executorService.execute(dialTesting.new VisitTask(finishedVisitNum, i + ".txt", (HttpHost)null, json));
+                taskResultMap.put(taskId + "", json);
+                executorService.execute(dialTesting.new VisitTask(finishedVisitNum, taskId + ".txt", (HttpHost)null, json));
             }
             executorService.shutdown();
         }
@@ -153,17 +159,16 @@ public class DialTesting {
     }
 
     public static void main(String[] args) {
-        String url = "http://dxcdntest.ctdns.net/";
-        int dialCnt = 100;
-        int interval = 1;
-        int concurrentNum = 10;
-        boolean proxyEnabled = false;
-        List<String> proxyList = new ArrayList<String>();
-        proxyList.add("58.221.5.17");
-        DialTestingInfo dialTestingInfo = new DialTestingInfo(url, dialCnt, interval, concurrentNum, 1, 1,proxyEnabled, proxyList);
-        String msg = dial(dialTestingInfo);
-        System.out.println(msg);
-
+//        String url = "http://dxcdntest.ctdns.net/";
+//        int dialCnt = 100;
+//        int interval = 1;
+//        int concurrentNum = 10;
+//        boolean proxyEnabled = false;
+//        List<String> proxyList = new ArrayList<String>();
+//        proxyList.add("58.221.5.17");
+//        DialTestingInfo dialTestingInfo = new DialTestingInfo(url, dialCnt, interval, concurrentNum, 1, 1,proxyEnabled, proxyList);
+//        String msg = dial(dialTestingInfo);
+//        System.out.println(msg);
     }
 
     //访问任务
@@ -204,12 +209,14 @@ public class DialTesting {
             int pos2 = this.fileName.lastIndexOf(".txt");
             String currThreadIndex = this.fileName.substring(pos1 + 1, pos2);
             String begin = DateUtils.getNowTimeStr("yyyy-MM-dd HH:mm:ss.SSS");
+            resultJson.put("currThreadIndex", currThreadIndex);
+            resultJson.put("begin", begin);
             while(!stopAllTaskFLag && this.totalCnt < currentDialTestingInfo.getDialCount()) {
                 JSONObject res = null;
-                ++this.totalCnt;
-                finishedVisitNum.set(0, this.totalCnt);
                 res = HttpclientUtil.get(currentDialTestingInfo.getUrl(), this.host,
                         currentDialTestingInfo.getConTimeout(), currentDialTestingInfo.getSoTimeout());
+                ++this.totalCnt;
+                finishedVisitNum.set(0, this.totalCnt);
                 if (res.getString("statusCode").equals("200")) {
                     ++this.count200Ok;
                     finishedVisitNum.set(1, this.count200Ok);
@@ -231,9 +238,7 @@ public class DialTesting {
 
             //统计结果
             String end = DateUtils.getNowTimeStr("yyyy-MM-dd HH:mm:ss.SSS");
-            resultJson.put("currThreadIndex", currThreadIndex);
-            resultJson.put("proxyIp", null != this.host ? this.host.getHostName():"");
-            resultJson.put("begin", begin);
+
             resultJson.put("end", end);
             resultJson.put("totalCnt", this.totalCnt);
             resultJson.put("count200Ok", this.count200Ok);

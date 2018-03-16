@@ -22,7 +22,7 @@
                             <label class="layui-form-label">访问URL</label>
                             <div class="layui-input-block">
                                 <input type="text" name="url" required  lay-verify="required|url" placeholder="请输入URL"
-                                       value="http://www.baidu.com/" autocomplete="off" class="layui-input" >
+                                       value="http://dxcdntest.ctdns.net/" autocomplete="off" class="layui-input" >
                             </div>
                         </div>
                         <div class="layui-form-item">
@@ -93,30 +93,6 @@
                 </div>
                 <div class="dial-right-task-panel task-detail-list">
                     无
-                    <!--<div class="dial-right-task-detail">
-                        <div class="dial-task-name">1000-1</div>
-                        <div class="dial-task-ip ">
-                            42.123.92.9
-                        </div>
-                        <div class="dial-task-time">
-                            2018-03-14 12:23:12.9756
-                        </div>
-                        <hr>
-
-                        <div class="dial-task-visitcnt">
-                            <span class="dial-task-visitcnt-tip">拨测总数</span>10000
-                        </div>
-                        <div class="dial-task-visitcnt">
-                            <span class="dial-task-visitcnt-tip">成功拨测数</span>32400
-                        </div>
-                        <div class="layui-progress dial-task-progress" lay-filter="dial-task-progress-1" lay-showPercent="yes">
-                            <div class="layui-progress-bar layui-bg-orange" lay-percent="45.5%"></div>
-                        </div>
-                        <hr>
-                        <div style="text-align: center">
-                            <button id="showDetail" class="layui-btn layui-btn-xs layui-btn-primary layui-btn-disabled">查看详情</button>
-                        </div>
-                    </div>-->
                 </div>
             </div>
         </div>
@@ -177,9 +153,11 @@
                         var code = res.resultCode;
                         var msg = res.msg;
                         var html = "信息：" + msg;
+
                         $('.dial-task-status').removeClass('dial-noactive');
                         $(".dial-task-status").removeClass("dial-active");
                         $(".dial-task-status").removeClass("dial-running");
+                        $('.dial-task-status').html('');
                         if (code == 0) {
                             $('.dial-task-status').addClass('dial-active');
                         }
@@ -187,11 +165,35 @@
                             $(".dial-task-status").removeClass("dial-active");
                             $(".dial-task-status").addClass("dial-running");
                         }
-                        $('.dial-task-status').html(html);
+
+                        //任务新建或运行时支持停止任务
+                        if (code == 0 || code == 1) {
+                            $stopAllBtn = $('<span class="dial-stopBtn" title="停止所有任务">' +
+                                '<i class="layui-icon" style="font-size: 20px; color: red;">&#xe617;</i></span>');
+                            $('.dial-task-status').append($stopAllBtn);
+                            $('.dial-stopBtn').on('click', function () {
+                                $.ajax({
+                                    url:"stopAllTask",
+                                    type:"post",
+                                    data:{},
+                                    dataType:"json",
+                                    success:function (result) {
+                                        layer.msg(result.result);
+                                        console.log('停止计时器');
+                                        //停止计时器
+                                        clearInterval(taskInterval);
+                                    },
+                                    error:function(){
+                                    }
+                                });
+                            });
+                        }
+
+                        $('.dial-task-status').append(html);
 
                         //服务端有任务信息返回，向服务器请求获取拨测任务执行进度
                         if (res.taskIdList && res.dialTestingInfo) {
-                            //$(".task-detail-list").html('');
+                            $(".task-detail-list").html('');
                             queryTaskProgress(res.taskIdList, res.dialTestingInfo);
                         }
                     },
@@ -228,33 +230,37 @@
                 var proxyIp = '';
                 var arr = taskId.split('-');
                 if (arr.length == 2) {
-                    proxyIp = arr[1];
+                    proxyIp = arr[0];
+                    taskId = arr[1];
                 }
                 var dialCount = dialTestingInfo.dialCount;
                 var taskDetailDiv = $('<div class="dial-right-task-detail">' +
-                    '                        <div class="dial-task-name">'+taskId+'</div>' +
+                    '                        <div class="dial-task-name">任务 '+taskId+'</div>' +
                     '                        <div class="dial-task-ip ">' + proxyIp +
                     '                        </div>' +
                     '                        <div class="dial-task-time">' +
                     '                        </div>' +
                     '                        <hr>' +
                     '                        <div class="dial-task-visitcnt">' +
-                    '                            <span class="dial-task-visitcnt-tip">拨测总数</span>' + dialTestingInfo.dialCount +
+                    '                            <span class="dial-task-visitcnt-tip">拨测任务总数</span>' + dialTestingInfo.dialCount +
                     '                        </div>' +
                     '                        <div class="dial-task-visitcnt">' +
-                    '                            <span class="dial-task-visitcnt-tip">成功拨测数</span><span id="dial-succ-cnt-'+taskId.replace(/\./g, '_')+'">0</span>' +
+                    '                            <span class="dial-task-visitcnt-tip">实际拨测总数</span><span class="dial-finish-cnt">0</span>' +
                     '                        </div>' +
-                    '                        <div class="layui-progress dial-task-progress"  lay-showPercent="yes">' +
-                    '                            <div class="layui-progress-bar layui-bg-orange" lay-percent="20%"></div>' +
+                    '                        <div class="dial-task-visitcnt">' +
+                    '                            <span class="dial-task-visitcnt-tip">成功拨测总数</span><span class="dial-succ-cnt">0</span>' +
+                    '                        </div>' +
+                    '                        <div class="layui-progress dial-task-progress" lay-filter="filter-dial-task-progress-'+taskId.replace(/\./g, '_')+'" lay-showPercent="yes">' +
+                    '                            <div class="layui-progress-bar layui-bg-orange" lay-percent="0%"></div>' +
                     '                        </div>' +
                     '                        <hr>' +
-                    '                        <div style="text-align: center">' +
-                    '                            <button id="showDetail" class="layui-btn layui-btn-xs layui-btn-primary layui-btn-disabled">查看详情</button>' +
+                    '                        <div style="text-align: center;margin-bottom: 5px">' +
+                    '                            <button id="showTaskDetail-'+ taskId.replace(/\./g, '_') +'" class="layui-btn layui-btn-xs layui-btn-primary layui-btn-disabled">查看详情</button>' +
                     '                        </div>' +
                     '                    </div>');
-                //lay-filter="ssfilter-dial-task-progress-'+taskId.replace(/\./g, '_')+'"
                 taskDetailDiv.attr("id", "dial-task-progress-" + taskId.replace(/\./g, '_'));
                 $('.task-detail-list').append(taskDetailDiv);
+                element.render('progress');
             }
 
             function qrySingleTaskProgress() {
@@ -266,9 +272,11 @@
                     success:function (result) {
                         if (result) {
                             if (result.taskMap && result.taskResultMap && result.dialTestingInfo) {
+
                                 var taskCnt = 0;
                                 var finishTaskCnt = 0;
                                 $.each(result.taskMap, function (taskId, finishedVisitList) {
+                                    $currTaskPanel = $("#dial-task-progress-" + taskId.replace(/\./g, '_'));
                                     taskCnt++;
                                     var arr = taskId.split('-');
                                     var dialCount = result.dialTestingInfo.dialCount;
@@ -279,38 +287,56 @@
                                     }
                                     var finishedVisitCnt = finishedVisitList[0];
                                     var successVisitCnt = finishedVisitList[1];
-                                    var mmm = $("#dial-succ-cnt-" + taskId.replace(/\./g, '_')).html(successVisitCnt);
-                                    //.children(".dial-succ-cnt").html(successVisitCnt);
+                                    $currTaskPanel.children('div.dial-task-visitcnt:eq(1)').children('span.dial-finish-cnt').html(finishedVisitCnt);
+                                    $currTaskPanel.children('div.dial-task-visitcnt:eq(2)').children('span.dial-succ-cnt').html(successVisitCnt);
                                     var finishPercent = (finishedVisitCnt * 100 / parseInt(dialCount)).toFixed(2) + '%';
-
-                                    element.progress('filter-dial-task-progress-' + taskId.replace(/\./g, '_'), '22%');
-
-                                    if (finishedVisitCnt == dialCount) {
-//                                        //此线程已完成所有访问请求
+                                    element.progress('filter-dial-task-progress-' + taskId.replace(/\./g, '_'), finishPercent);
+                                    $timeDiv = $currTaskPanel.children("div.dial-task-time");
+                                    var resultJson;
+                                    if (result.taskResultMap) {
+                                        resultJson = result.taskResultMap[taskId];
+                                        $timeDiv.html(resultJson.begin);
+                                    }
+                                    var notFinished = $("#showTaskDetail-" + taskId.replace(/\./g, '_')).hasClass('layui-btn-disabled');
+                                    if (notFinished && finishedVisitCnt == dialCount) {
+                                        //此线程已完成所有访问请求
                                         finishTaskCnt++;
-                                        if (result.taskResultMap) {
-                                            var resultJson = result.taskResultMap[taskId];
-//                                            if (resultJson) {
-//                                                resultStatic += '<br>时间：' + resultJson.begin
-//                                                    + ' ~ ' + resultJson.end + '<br><span class="dial-static-total">总访问量数：' + resultJson.totalCnt
-//                                                    + '</span><span class="dial-static-200">返回码200：' + resultJson.count200Ok + '</span>'
-//                                                    + '<span class="dial-static-403">返回码403：' + resultJson.count403
-//                                                    + '</span><span class="dial-static-500">返回码500：' + resultJson.count500 + '</span>'
-//                                                    + '<span class="dial-static-other">超时：' + resultJson.countOther + '</span>';
-//
-//                                                $("#dial-task-progress-" + taskId.replace(/\./g, '_')).html("[任务" + taskId + "]处理完成" + resultStatic);
-//                                            }
+                                        if (resultJson) {
+                                            $timeDiv.html(resultJson.begin + '<br>' + resultJson.end);
+                                            var $showBtn = $("#showTaskDetail-" + taskId.replace(/\./g, '_'));
+                                            $showBtn.removeClass('layui-btn-disabled');
+                                            $showBtn.on('click', function () {
+                                                var that = this;
+                                                var content = '<div class="dial-task-rspcode">' +
+                                                    '    <span class="dial-task-rspcode-tip">返回码200</span>' +
+                                                    '    <span class="layui-badge layui-bg-green">' + resultJson.count200Ok + '</span>' +
+                                                    '</div>' +
+                                                    '<div class="dial-task-rspcode">' +
+                                                    '    <span class="dial-task-rspcode-tip">返回码403</span>' +
+                                                    '    <span class="layui-badge layui-bg-orange">' + resultJson.count403 + '</span>' +
+                                                    '</div>' +
+                                                    '<div class="dial-task-rspcode">' +
+                                                    '    <span class="dial-task-rspcode-tip">返回码500</span>' +
+                                                    '    <span class="layui-badge">' + resultJson.count500 + '</span>' +
+                                                    '</div>' +
+                                                    '<div class="dial-task-rspcode">' +
+                                                    '    <span class="dial-task-rspcode-tip">超时</span>' +
+                                                    '    <span class="layui-badge-rim">' + resultJson.countOther + '</span>' +
+                                                    '</div>'
+                                                layer.tips(content, that, {
+                                                    tips: [3, '#43CBFF']
+                                                });
+                                            });
                                         }
                                     }
-//                                    else {
-//                                        $("#dial-task-progress-" + taskId.replace(/\./g, '_')).html("[任务" + taskId + "] 应请求 "+dialCnt+"次，" +
-//                                            " 当前已完成请求 ["+finishedVisitCnt+"]次，完成百分比：" + finishPercent);
-//                                    }
                                 });
-//                                if (finishTaskCnt == taskCnt) {
-//                                    //停止计时器
-//                                    clearInterval(taskInterval);
-//                                }
+
+                                console.log("finishTaskCnt:" + finishTaskCnt + ', taskCnt:' + taskCnt);
+                                if (finishTaskCnt == taskCnt) {
+                                    console.log('停止计时器');
+                                    //停止计时器
+                                    clearInterval(taskInterval);
+                                }
                             }
                         }
                     },
@@ -321,36 +347,6 @@
                     }
                 });
             }
-
-            $("#showDetail").on('click', function () {
-                var that = this;
-                var content = '<div class="dial-task-rspcode">' +
-                    '    <span class="dial-task-rspcode-tip">返回码200</span>' +
-                    '    <span class="layui-badge layui-bg-green">27600</span>' +
-                    '</div>' +
-                    '<div class="dial-task-rspcode">' +
-                    '    <span class="dial-task-rspcode-tip">返回码403</span>' +
-                    '    <span class="layui-badge layui-bg-orange">12</span>' +
-                    '</div>' +
-                    '<div class="dial-task-rspcode">' +
-                    '    <span class="dial-task-rspcode-tip">返回码500</span>' +
-                    '    <span class="layui-badge">66</span>' +
-                    '</div>' +
-                    '<div class="dial-task-rspcode">' +
-                    '    <span class="dial-task-rspcode-tip">超时</span>' +
-                    '    <span class="layui-badge-rim">5</span>' +
-                    '</div>'
-                layer.tips(content, that, {
-                    tips: [3, '#43CBFF']
-                });
-
-                setTimeout(function(){element.progress('dial-task-progress-1', '58.9%');},1000);
-                setTimeout(function(){element.progress('dial-task-progress-1', '66.2%');},2000);
-                setTimeout(function(){element.progress('dial-task-progress-1', '73.3%');},3000);
-                setTimeout(function(){element.progress('dial-task-progress-1', '85.4%');},4000);
-                setTimeout(function(){element.progress('dial-task-progress-1', '99.8%');},5000);
-                setTimeout(function(){element.progress('dial-task-progress-1', '100%');},6000);
-            });
         });
     </script>
     <script>

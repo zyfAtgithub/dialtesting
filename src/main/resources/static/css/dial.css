@@ -60,6 +60,11 @@ body{
     color: #FD482C;
 }
 
+.dial-stopBtn {
+    cursor: pointer;
+    margin-right: 10px;
+}
+
 /** 任务详情*/
 .dial-right-task-detail {
     padding: 4px 3px;
@@ -67,7 +72,7 @@ body{
     border: 1px solid #B2B2B2;
     border-radius: 5px;
     width: 180px;
-    height: 220px;
+    /*height: 220px;*/
     display: inline-block;
     vertical-align: top;
     margin: 2px;
@@ -89,6 +94,7 @@ body{
 }
 
 .dial-task-time {
+    height: 30px;
     margin-top: 8px;
     font-size: 13px;
     color: #666666;
