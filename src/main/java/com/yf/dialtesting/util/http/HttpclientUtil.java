@@ -13,25 +13,20 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.regex.Pattern;
 import javax.net.ssl.SSLHandshakeException;
 
 import com.yf.dialtesting.util.common.DateUtils;
 import com.yf.dialtesting.util.common.StringUtils;
 import net.sf.json.JSONObject;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpEntityEnclosingRequest;
-import org.apache.http.HttpHost;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpVersion;
-import org.apache.http.NameValuePair;
-import org.apache.http.NoHttpResponseException;
+import org.apache.http.*;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.HttpRequestRetryHandler;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.conn.ClientConnectionManager;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.HttpContext;
@@ -151,7 +146,10 @@ public class HttpclientUtil {
                 long end;
                 try {
                     HttpResponse response = httpclient.execute(hg);
+                    //get all headers
+
                     end = System.currentTimeMillis();
+                    jsonResult.put("resp-server", getViaServerFromResponseHeader(response));
                     jsonResult.put("end", DateUtils.date2String(new Date(end), "HH:mm:ss.SSS"));
                     jsonResult.put("statusCode", response.getStatusLine().getStatusCode());
                     jsonResult.put("content", EntityUtils.toString(response.getEntity()));
@@ -178,6 +176,28 @@ public class HttpclientUtil {
         }
     }
 
+    private static final Pattern RSP_SERVER_PATTERN = Pattern.compile("");
+    /**
+     * 从响应头中获取响应服务器信息
+     * 【http/1.1 58.221.5.17 (cache-xinan [cHs f ])】
+     * @param response
+     * @return
+     */
+    private static String getViaServerFromResponseHeader(HttpResponse response) {
+        if (response == null || response.getAllHeaders() == null) {
+            return "";
+        }
+        Header[] headers = response.getAllHeaders();
+        for (Header header : headers) {
+            System.out.println("Key : " + header.getName()
+                    + " ,Value : " + header.getValue());
+            if ("Via".equals(header.getName())) {
+                return header.getValue();
+            }
+        }
+        return "";
+    }
+
     public static HttpClient getDefaultHttpClient(int contimeout, int sotimeout) {
         DefaultHttpClient httpclient = new DefaultHttpClient();
         httpclient.getParams().setParameter("http.protocol.version", HttpVersion.HTTP_1_1);
@@ -193,7 +213,9 @@ public class HttpclientUtil {
     public static void main(String[] args) {
         HttpHost poxy = new HttpHost("58.53.219.5", 80);
         System.out.println(poxy.getHostName());
-        JSONObject res = get("http://cdntest.ctdns.net/", poxy, 200, 400);
+//        JSONObject res = get("http://cdntest.ctdns.net/", poxy, 200, 400);
+//        JSONObject res = get("http://cdntest.ctdns.net/", null, 200, 400);
+        JSONObject res = get("https://www.baidu.com/", null, 200, 400);
         System.out.println(res.toString());
     }
 }

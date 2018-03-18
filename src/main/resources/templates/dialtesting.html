@@ -298,10 +298,10 @@
                                         $timeDiv.html(resultJson.begin);
                                     }
                                     var notFinished = $("#showTaskDetail-" + taskId.replace(/\./g, '_')).hasClass('layui-btn-disabled');
-                                    if (notFinished && finishedVisitCnt == dialCount) {
+                                    if (finishedVisitCnt == dialCount) {
                                         //此线程已完成所有访问请求
                                         finishTaskCnt++;
-                                        if (resultJson) {
+                                        if (notFinished && resultJson) {
                                             $timeDiv.html(resultJson.begin + '<br>' + resultJson.end);
                                             var $showBtn = $("#showTaskDetail-" + taskId.replace(/\./g, '_'));
                                             $showBtn.removeClass('layui-btn-disabled');

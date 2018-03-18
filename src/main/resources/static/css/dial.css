@@ -12,7 +12,7 @@ body{
 }
 .dial-left-setting-panel {
     margin: 2px auto;
-    padding: 5px 12px;
+    padding: 5px 15px;
     border: 1px solid #D9D9D9;
     background: white;
     border-radius: 3px;
@@ -67,15 +67,15 @@ body{
 
 /** 任务详情*/
 .dial-right-task-detail {
-    padding: 4px 3px;
+    padding: 4px 2px;
     position: relative;
     border: 1px solid #B2B2B2;
     border-radius: 5px;
-    width: 180px;
+    width: 170px;
     /*height: 220px;*/
     display: inline-block;
     vertical-align: top;
-    margin: 2px;
+    margin: 5px 2px;
 
 }
 
@@ -102,14 +102,14 @@ body{
 }
 
 .dial-task-visitcnt-tip {
-    font-size: 14px;
+    font-size: 12px;
     color: #999999;
     margin-right: 6px;
     font-weight: normal;
 }
 .dial-task-visitcnt {
     padding-left: 25px;
-    font-size: 20px;
+    font-size: 17px;
     color: #1E9FFF;
     font-weight: bold;
 }
