@@ -176,7 +176,6 @@ public class HttpclientUtil {
         }
     }
 
-    private static final Pattern RSP_SERVER_PATTERN = Pattern.compile("");
     /**
      * 从响应头中获取响应服务器信息
      * 【http/1.1 58.221.5.17 (cache-xinan [cHs f ])】
@@ -189,8 +188,6 @@ public class HttpclientUtil {
         }
         Header[] headers = response.getAllHeaders();
         for (Header header : headers) {
-            System.out.println("Key : " + header.getName()
-                    + " ,Value : " + header.getValue());
             if ("Via".equals(header.getName())) {
                 return header.getValue();
             }
@@ -214,8 +211,8 @@ public class HttpclientUtil {
         HttpHost poxy = new HttpHost("58.53.219.5", 80);
         System.out.println(poxy.getHostName());
 //        JSONObject res = get("http://cdntest.ctdns.net/", poxy, 200, 400);
-//        JSONObject res = get("http://cdntest.ctdns.net/", null, 200, 400);
-        JSONObject res = get("https://www.baidu.com/", null, 200, 400);
+        JSONObject res = get("http://dxcdntest.ctdns.net/", null, 200, 400);
+//        JSONObject res = get("https://www.baidu.com/", null, 200, 400);
         System.out.println(res.toString());
     }
 }
