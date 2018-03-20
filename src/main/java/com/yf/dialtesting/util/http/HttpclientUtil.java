@@ -133,7 +133,7 @@ public class HttpclientUtil {
     public static JSONObject get(String url, HttpHost proxy, int contimeout, int sotimeout) {
         if (url != null && !StringUtils.isEmpty(url)) {
             JSONObject jsonResult = new JSONObject();
-            HttpClient httpclient = getDefaultHttpClient(contimeout, sotimeout);
+            HttpClient httpclient = getDefaultHttpClient("UTF-8", contimeout, sotimeout);
             if (null != proxy) {
                 httpclient.getParams().setParameter("http.route.default-proxy", proxy);
             }
@@ -146,20 +146,18 @@ public class HttpclientUtil {
                 long end;
                 try {
                     HttpResponse response = httpclient.execute(hg);
-                    //get all headers
-
                     end = System.currentTimeMillis();
-                    jsonResult.put("resp-server", getViaServerFromResponseHeader(response));
+//                    jsonResult.put("resp-server", getViaServerFromResponseHeader(response));
                     jsonResult.put("end", DateUtils.date2String(new Date(end), "HH:mm:ss.SSS"));
                     jsonResult.put("statusCode", response.getStatusLine().getStatusCode());
                     jsonResult.put("content", EntityUtils.toString(response.getEntity()));
                     jsonResult.put("cost", end - begin);
-                } catch (Exception var15) {
+                } catch (Exception e) {
                     end = System.currentTimeMillis();
                     jsonResult.put("end", DateUtils.date2String(new Date(end), "HH:mm:ss.SSS"));
                     jsonResult.put("statusCode", "999");
                     jsonResult.put("cost", end - begin);
-                    jsonResult.put("excep", var15.getMessage());
+                    jsonResult.put("excep", e.getMessage());
                 }
             } finally {
                 if (hg != null) {
@@ -195,12 +193,12 @@ public class HttpclientUtil {
         return "";
     }
 
-    public static HttpClient getDefaultHttpClient(int contimeout, int sotimeout) {
+    public static HttpClient getDefaultHttpClient(String charSet, int contimeout, int sotimeout) {
         DefaultHttpClient httpclient = new DefaultHttpClient();
         httpclient.getParams().setParameter("http.protocol.version", HttpVersion.HTTP_1_1);
         httpclient.getParams().setParameter("http.useragent", "Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1)");
         httpclient.getParams().setParameter("http.protocol.expect-continue", Boolean.FALSE);
-        httpclient.getParams().setParameter("http.protocol.content-charset", "GBK");
+        httpclient.getParams().setParameter("http.protocol.content-charset", StringUtils.isNullOrEmpty(charSet)? "UTF-8" : charSet);
         httpclient.getParams().setParameter("http.connection.timeout", contimeout);
         httpclient.getParams().setParameter("http.socket.timeout", sotimeout);
         httpclient.setHttpRequestRetryHandler(requestRetryHandler);

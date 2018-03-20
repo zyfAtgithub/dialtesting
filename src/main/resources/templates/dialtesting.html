@@ -295,14 +295,17 @@
                                     var resultJson;
                                     if (result.taskResultMap) {
                                         resultJson = result.taskResultMap[taskId];
-                                        $timeDiv.html(resultJson.begin);
+                                        var time = resultJson.begin;
+                                        if (resultJson.end) {
+                                            time += '<br>' + resultJson.end;
+                                        }
+                                        $timeDiv.html(time);
                                     }
                                     var notFinished = $("#showTaskDetail-" + taskId.replace(/\./g, '_')).hasClass('layui-btn-disabled');
                                     if (finishedVisitCnt == dialCount) {
                                         //此线程已完成所有访问请求
                                         finishTaskCnt++;
                                         if (notFinished && resultJson) {
-                                            $timeDiv.html(resultJson.begin + '<br>' + resultJson.end);
                                             var $showBtn = $("#showTaskDetail-" + taskId.replace(/\./g, '_'));
                                             $showBtn.removeClass('layui-btn-disabled');
                                             $showBtn.on('click', function () {

@@ -215,14 +215,15 @@ public class DialTesting {
                 JSONObject res = null;
                 res = HttpclientUtil.get(currentDialTestingInfo.getUrl(), this.host,
                         currentDialTestingInfo.getConTimeout(), currentDialTestingInfo.getSoTimeout());
-                ++this.totalCnt;
-                finishedVisitNum.set(0, this.totalCnt);
                 if (res.getString("statusCode").equals("200")) {
                     ++this.count200Ok;
+                    finishedVisitNum.set(0, ++this.totalCnt);
                     finishedVisitNum.set(1, this.count200Ok);
                 } else if (res.getString("statusCode").equals("403")) {
+                    finishedVisitNum.set(0, ++this.totalCnt);
                     ++this.count403;
                 } else if (res.getString("statusCode").equals("500")) {
+                    finishedVisitNum.set(0, ++this.totalCnt);
                     ++this.count500;
                 } else if (res.getString("statusCode").equals("999")) {
                     ++this.countOther;
@@ -246,19 +247,19 @@ public class DialTesting {
             resultJson.put("count500", this.count500);
             resultJson.put("countOther", this.countOther);
 
-            StringBuffer buf = new StringBuffer();
-            if (null != this.host) {
-                buf.append("线程号：").append(currThreadIndex).append("\n代理Ip：" + this.host.getHostName());
-                resultJson.put("proxyIp", this.host.getHostName());
-            } else {
-                buf.append("\n线程号：").append(currThreadIndex);
-            }
-            buf.append("\n开始时间：");
-            buf.append(begin).append("\n结束时间：").append(end);
-            buf.append("\n统计：count:[").append(this.totalCnt).append("]").append(", 200 OK count:[").append(this.count200Ok)
-                    .append("], 403 count:[").append(this.count403).append("], 500 count:[")
-                    .append(this.count500).append("], other count:[").append(this.countOther).append("]");
-            System.out.println(buf.toString());
+//            StringBuffer buf = new StringBuffer();
+//            if (null != this.host) {
+//                buf.append("线程号：").append(currThreadIndex).append("\n代理Ip：" + this.host.getHostName());
+//                resultJson.put("proxyIp", this.host.getHostName());
+//            } else {
+//                buf.append("\n线程号：").append(currThreadIndex);
+//            }
+//            buf.append("\n开始时间：");
+//            buf.append(begin).append("\n结束时间：").append(end);
+//            buf.append("\n统计：count:[").append(this.totalCnt).append("]").append(", 200 OK count:[").append(this.count200Ok)
+//                    .append("], 403 count:[").append(this.count403).append("], 500 count:[")
+//                    .append(this.count500).append("], other count:[").append(this.countOther).append("]");
+//            System.out.println(buf.toString());
             //FileUtil.appentContent2File(STOR_DIR + this.dayDir + File.separator + this.fileName, buf.toString());
 
         }
