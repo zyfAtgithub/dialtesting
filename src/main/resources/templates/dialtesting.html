@@ -50,14 +50,14 @@
                             <label class="layui-form-label">连接超时</label>
                             <div class="layui-input-block">
                                 <input type="text" name="conTimeout" required lay-verify="required|number" placeholder="请输入连接超时(ms)"
-                                       value="2000" autocomplete="off" class="layui-input"/>
+                                       value="5000" autocomplete="off" class="layui-input"/>
                             </div>
                         </div>
                         <div class="layui-form-item">
                             <label class="layui-form-label">传输超时</label>
                             <div class="layui-input-block">
                                 <input type="text" name="soTimeout" required lay-verify="required|number" placeholder="请输入传输超时(ms)"
-                                       value="3000" autocomplete="off" class="layui-input"/>
+                                       value="5000" autocomplete="off" class="layui-input"/>
                             </div>
                         </div>
                         <div class="layui-form-item" pane>
@@ -117,6 +117,11 @@
             });
 
             form.on('submit(formDispatch)', function (data) {
+
+                if (data.field.concurrentNum > 50) {
+                    layer.msg('并发数太大了，设置小点把（≤50）', {icon: 5, anim: 6});
+                    return false;
+                }
                 data.field.proxyEnabled = data.field.proxyEnabled == 'on';
                 var proxyIPList = [];
                 if (data.field.proxyEnabled) {
@@ -140,6 +145,7 @@
                         layer.msg('第'+ (++erroIndex) + '行不是有效的IP', {icon: 5, anim: 6});
                         return false;
                     }
+                    data.field.concurrentNum = 1;
                 }
                 data.field.proxyList = proxyIPList;
 
@@ -199,7 +205,7 @@
                     },
                     error:function(xhr,textStatus){
                         console.log('服务器处理出错');
-                        console.log(xhr)
+                        console.log(xhr);
                         console.log(textStatus)
                     }
                 });
@@ -227,15 +233,17 @@
             }
 
             function addDialTaskDetail(taskId, dialTestingInfo) {
+                debugger;
                 var proxyIp = '';
                 var arr = taskId.split('-');
+                var taskName = taskId;
                 if (arr.length == 2) {
                     proxyIp = arr[0];
-                    taskId = arr[1];
+                    taskName = arr[1];
                 }
                 var dialCount = dialTestingInfo.dialCount;
                 var taskDetailDiv = $('<div class="dial-right-task-detail">' +
-                    '                        <div class="dial-task-name">任务 '+taskId+'</div>' +
+                    '                        <div class="dial-task-name">任务 '+taskName+'</div>' +
                     '                        <div class="dial-task-ip ">' + proxyIp +
                     '                        </div>' +
                     '                        <div class="dial-task-time">' +
@@ -276,7 +284,6 @@
                                 var taskCnt = 0;
                                 var finishTaskCnt = 0;
                                 $.each(result.taskMap, function (taskId, finishedVisitList) {
-                                    $currTaskPanel = $("#dial-task-progress-" + taskId.replace(/\./g, '_'));
                                     taskCnt++;
                                     var arr = taskId.split('-');
                                     var dialCount = result.dialTestingInfo.dialCount;
@@ -287,6 +294,7 @@
                                     }
                                     var finishedVisitCnt = finishedVisitList[0];
                                     var successVisitCnt = finishedVisitList[1];
+                                    $currTaskPanel = $("#dial-task-progress-" + taskId.replace(/\./g, '_'));
                                     $currTaskPanel.children('div.dial-task-visitcnt:eq(1)').children('span.dial-finish-cnt').html(finishedVisitCnt);
                                     $currTaskPanel.children('div.dial-task-visitcnt:eq(2)').children('span.dial-succ-cnt').html(successVisitCnt);
                                     var finishPercent = (finishedVisitCnt * 100 / parseInt(dialCount)).toFixed(2) + '%';
@@ -432,7 +440,7 @@
             //2s查询一次
             taskInterval = setInterval(function(){qrySingleTaskProgress()}, 2000);
         }
-        
+
         function qrySingleTaskProgress() {
             $.ajax({
                 url:"qryTaskProgress",
@@ -492,7 +500,7 @@
                 }
             });
         }
-        
+
     </script>
 </body>
 </html>

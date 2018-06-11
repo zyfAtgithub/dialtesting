@@ -150,7 +150,7 @@ public class HttpclientUtil {
 //                    jsonResult.put("resp-server", getViaServerFromResponseHeader(response));
                     jsonResult.put("end", DateUtils.date2String(new Date(end), "HH:mm:ss.SSS"));
                     jsonResult.put("statusCode", response.getStatusLine().getStatusCode());
-                    jsonResult.put("content", EntityUtils.toString(response.getEntity()));
+//                    jsonResult.put("content", EntityUtils.toString(response.getEntity()));
                     jsonResult.put("cost", end - begin);
                 } catch (Exception e) {
                     end = System.currentTimeMillis();
@@ -198,10 +198,11 @@ public class HttpclientUtil {
         httpclient.getParams().setParameter("http.protocol.version", HttpVersion.HTTP_1_1);
         httpclient.getParams().setParameter("http.useragent", "Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1)");
         httpclient.getParams().setParameter("http.protocol.expect-continue", Boolean.FALSE);
+        httpclient.getParams().setParameter("http.protocol.wait-for-continue", Boolean.FALSE);
         httpclient.getParams().setParameter("http.protocol.content-charset", StringUtils.isNullOrEmpty(charSet)? "UTF-8" : charSet);
         httpclient.getParams().setParameter("http.connection.timeout", contimeout);
         httpclient.getParams().setParameter("http.socket.timeout", sotimeout);
-        httpclient.setHttpRequestRetryHandler(requestRetryHandler);
+        //httpclient.setHttpRequestRetryHandler(requestRetryHandler); //超时不重试
         return httpclient;
     }
 
@@ -209,7 +210,7 @@ public class HttpclientUtil {
         HttpHost poxy = new HttpHost("58.53.219.5", 80);
         System.out.println(poxy.getHostName());
 //        JSONObject res = get("http://cdntest.ctdns.net/", poxy, 200, 400);
-        JSONObject res = get("http://dxcdntest.ctdns.net/", null, 200, 400);
+        JSONObject res = get("http://cdntest.ctdns.net/", null, 2000, 30);
 //        JSONObject res = get("https://www.baidu.com/", null, 200, 400);
         System.out.println(res.toString());
     }

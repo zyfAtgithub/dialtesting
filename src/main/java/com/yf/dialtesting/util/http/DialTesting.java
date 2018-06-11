@@ -215,15 +215,13 @@ public class DialTesting {
                 JSONObject res = null;
                 res = HttpclientUtil.get(currentDialTestingInfo.getUrl(), this.host,
                         currentDialTestingInfo.getConTimeout(), currentDialTestingInfo.getSoTimeout());
+                finishedVisitNum.set(0, ++this.totalCnt);
                 if (res.getString("statusCode").equals("200")) {
                     ++this.count200Ok;
-                    finishedVisitNum.set(0, ++this.totalCnt);
                     finishedVisitNum.set(1, this.count200Ok);
                 } else if (res.getString("statusCode").equals("403")) {
-                    finishedVisitNum.set(0, ++this.totalCnt);
                     ++this.count403;
                 } else if (res.getString("statusCode").equals("500")) {
-                    finishedVisitNum.set(0, ++this.totalCnt);
                     ++this.count500;
                 } else if (res.getString("statusCode").equals("999")) {
                     ++this.countOther;
