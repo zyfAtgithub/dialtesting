@@ -186,7 +186,7 @@ public class HttpclientUtil {
         httpclient.getParams().setParameter("http.protocol.content-charset", "GBK");
         httpclient.getParams().setParameter("http.connection.timeout", contimeout);
         httpclient.getParams().setParameter("http.socket.timeout", sotimeout);
-        httpclient.setHttpRequestRetryHandler(requestRetryHandler);
+//        httpclient.setHttpRequestRetryHandler(requestRetryHandler);
         return httpclient;
     }
 
