@@ -44,7 +44,7 @@ public class HttpclientUtil {
     private static final int SSL_DEFAULT_PORT = 443;
     private static HttpRequestRetryHandler requestRetryHandler = new HttpRequestRetryHandler() {
         public boolean retryRequest(IOException exception, int executionCount, HttpContext context) {
-            if (executionCount >= 3) {
+            if (executionCount >= 1) {
                 return false;
             } else if (exception instanceof NoHttpResponseException) {
                 return true;
@@ -186,14 +186,14 @@ public class HttpclientUtil {
         httpclient.getParams().setParameter("http.protocol.content-charset", "GBK");
         httpclient.getParams().setParameter("http.connection.timeout", contimeout);
         httpclient.getParams().setParameter("http.socket.timeout", sotimeout);
-//        httpclient.setHttpRequestRetryHandler(requestRetryHandler);
+        httpclient.setHttpRequestRetryHandler(requestRetryHandler);
         return httpclient;
     }
 
     public static void main(String[] args) {
         HttpHost poxy = new HttpHost("58.53.219.5", 80);
         System.out.println(poxy.getHostName());
-        JSONObject res = get("http://cdntest.ctdns.net/", poxy, 200, 400);
+        JSONObject res = get("http://124.127.118.181/index.htm", null, 200, 400);
         System.out.println(res.toString());
     }
 }
