@@ -39,7 +39,7 @@ public class HttpclientUtil {
     private static final int SSL_DEFAULT_PORT = 443;
     private static HttpRequestRetryHandler requestRetryHandler = new HttpRequestRetryHandler() {
         public boolean retryRequest(IOException exception, int executionCount, HttpContext context) {
-            if (executionCount >= 3) {
+            if (executionCount >= 1) {
                 return false;
             } else if (exception instanceof NoHttpResponseException) {
                 return true;
@@ -202,7 +202,7 @@ public class HttpclientUtil {
         httpclient.getParams().setParameter("http.protocol.content-charset", StringUtils.isNullOrEmpty(charSet)? "UTF-8" : charSet);
         httpclient.getParams().setParameter("http.connection.timeout", contimeout);
         httpclient.getParams().setParameter("http.socket.timeout", sotimeout);
-        //httpclient.setHttpRequestRetryHandler(requestRetryHandler); //超时不重试
+        httpclient.setHttpRequestRetryHandler(requestRetryHandler); //超时不重试
         return httpclient;
     }
 

@@ -5,6 +5,8 @@ import com.yf.dialtesting.util.common.DateUtils;
 import com.yf.dialtesting.util.ip.ValidateUtil;
 import net.sf.json.JSONObject;
 import org.apache.http.HttpHost;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -15,6 +17,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class DialTesting {
+
+    public static Logger logger = LoggerFactory.getLogger(DialTesting.class);
 
     /**
      * 懒汉式单例
@@ -149,6 +153,10 @@ public class DialTesting {
             }
             executorService.shutdown();
         }
+
+        logger.info("新增拨测任务，访问URL=[{}], 拨测次数=[{}], 间隔(ms)=[{}], 并发数=[{}], 连接超时=[{}], 传输超时=[{}]" , dialTestingInfo.getUrl(), dialTestingInfo.getDialCount()
+                , dialTestingInfo.getInterval(), dialTestingInfo.getConcurrentNum(), dialTestingInfo.getConTimeout(), dialTestingInfo.getSoTimeout());
+
 
         //将所有线程信息返回
         jsonResult.put("taskIdList", taskMap.keySet());
